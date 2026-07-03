@@ -8,7 +8,7 @@
     android:background="#121212"
     tools:context=".MainActivity">
 
-    <!-- tampilan map -->
+    <!-- tampilan mapcn -->
     <WebView
         android:id="@+id/mapWebView"
         android:layout_width="match_parent"
