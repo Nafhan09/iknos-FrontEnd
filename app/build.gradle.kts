@@ -41,4 +41,19 @@ dependencies {
     testImplementation(libs.junit)
     androidTestImplementation(libs.espresso.core)
     androidTestImplementation(libs.ext.junit)
+
+    // UI Dasar
+    implementation("androidx.appcompat:appcompat:1.6.1")
+    implementation("com.google.android.material:material:1.12.0")
+    implementation("androidx.constraintlayout:constraintlayout:2.1.4")
+
+    // WebSocket
+    implementation("com.squareup.okhttp3:okhttp:4.12.0")
+
+    // Foto profil pengguna peta
+    implementation("de.hdodenhof:circleimageview:3.1.0")
+
+    // Untuk memuat gambar/selfie dari internet ke aplikasi
+    implementation("com.github.bumptech.glide:glide:4.16.0")
+    annotationProcessor("com.github.bumptech.glide:compiler:4.16.0")
 }
