@@ -8,6 +8,7 @@
     android:background="#121212"
     tools:context=".MainActivity">
 
+    <!-- tampilan map -->
     <WebView
         android:id="@+id/mapWebView"
         android:layout_width="match_parent"
@@ -17,6 +18,7 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"/>
 
+    <!-- tampilan aktif user -->
     <LinearLayout
         android:id="@+id/panelTop"
         android:layout_width="match_parent"
@@ -46,6 +48,7 @@
             android:textStyle="bold" />
     </LinearLayout>
 
+    <!-- tampilan hide lokasi dan insta note -->
     <LinearLayout
         android:id="@+id/panelBottom"
         android:layout_width="match_parent"
@@ -60,6 +63,7 @@
         app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toStartOf="parent">
 
+        <!-- togle hide lokasi -->
         <com.google.android.material.materialswitch.MaterialSwitch
             android:id="@+id/switchHideLocation"
             android:layout_width="0dp"
@@ -69,6 +73,7 @@
             android:textColor="#FFFFFF"
             app:thumbTint="#00E676" />
 
+        <!-- tombol insta foto -->
         <Button
             android:id="@+id/btnInstaNote"
             android:layout_width="wrap_content"
