@@ -15,7 +15,7 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_bottom_toBottomOf="parent"
+        app:layout_constraintBottom_toTopOf="@id/panelBottom"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"/>
 
@@ -59,7 +59,7 @@
         android:orientation="horizontal"
         android:padding="16dp"
         app:layout_bottom_toBottomOf="parent"
-        app:layout_constraintBottom_toBottomOf="@+id/mapWebView"
+        app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toStartOf="parent">

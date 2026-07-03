@@ -89,7 +89,7 @@
         android:text="Belum punya akun? Daftar disini"
         android:textColor="#888888"
         android:layout_marginBottom="24dp"
-        app:layout_bottom_toBottomOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent" />
 
