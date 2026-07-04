@@ -35,8 +35,8 @@ public class LoginActivity extends AppCompatActivity {
                 } else {
                     Toast.makeText(this, "Login Berhasil (Mock)", Toast.LENGTH_SHORT).show();
 
-                    // Masuk ke halaman Utama (MainActivity)
-                    Intent intent = new Intent(LoginActivity.this, MainActivity.class);
+                    // Masuk ke halaman room
+                    Intent intent = new Intent(LoginActivity.this, RoomActivity.class);
                     startActivity(intent);
                     finish();
                 }
