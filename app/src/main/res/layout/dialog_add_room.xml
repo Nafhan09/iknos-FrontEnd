@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:background="#1E1E1E"
+    android:padding="20dp">
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="TAMBAH RUANGAN"
+        android:textColor="#00E676"
+        android:textSize="18sp"
+        android:textStyle="bold"
+        android:layout_marginBottom="16dp"/>
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Buat Ruangan Baru"
+        android:textColor="#FFFFFF"
+        android:textSize="14sp"
+        android:textStyle="bold" />
+
+    <com.google.android.material.textfield.TextInputLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="Nama Ruangan"
+        android:textColorHint="#888888"
+        android:layout_marginTop="4dp"
+        xmlns:app="http://schemas.android.com/apk/res-auto"
+        app:hintTextColor="#00E676"
+        app:boxStrokeColor="#00E676">
+        <com.google.android.material.textfield.TextInputEditText
+            android:id="@+id/etNewRoomName"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textColor="#FFFFFF" />
+    </com.google.android.material.textfield.TextInputLayout>
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="#333333"
+        android:layout_marginVertical="16dp"/>
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Gabung Ruangan Yang Sudah Ada"
+        android:textColor="#FFFFFF"
+        android:textSize="14sp"
+        android:textStyle="bold" />
+
+    <com.google.android.material.textfield.TextInputLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="Masukkan Kode Ruangan (Contoh: FAM-123)"
+        android:textColorHint="#888888"
+        android:layout_marginTop="4dp"
+        xmlns:app="http://schemas.android.com/apk/res-auto"
+        app:hintTextColor="#00E676"
+        app:boxStrokeColor="#00E676">
+        <com.google.android.material.textfield.TextInputEditText
+            android:id="@+id/etJoinRoomCode"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textColor="#FFFFFF" />
+    </com.google.android.material.textfield.TextInputLayout>
+
+</LinearLayout>
