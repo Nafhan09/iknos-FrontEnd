@@ -26,6 +26,10 @@
             android:exported="false" />
 
         <activity
+            android:name=".RoomActivity"
+            android:exported="false" />
+
+        <activity
             android:name=".MainActivity"
             android:exported="false" />
     </application>
