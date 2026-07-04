@@ -96,13 +96,13 @@ public class RoomActivity extends AppCompatActivity {
                     String joinRoomCode = etJoinRoomCode.getText() != null ? etJoinRoomCode.getText().toString().trim() : "";
 
                     if (!newRoomName.isEmpty()) {
-                        // Kasus 1: User membuat room baru
+                        // User membuat room baru
                         Toast.makeText(this, "Membuat room: " + newRoomName + " (Proses Backend)", Toast.LENGTH_SHORT).show();
-                        // TODO: Bagian backend untuk request API create room
+                        // TODO: request API create room
                     } else if (!joinRoomCode.isEmpty()) {
-                        // Kasus 2: User bergabung dengan room yang ada
+                        // User bergabung dengan room yang ada
                         Toast.makeText(this, "Bergabung ke kode: " + joinRoomCode + " (Proses Backend)", Toast.LENGTH_SHORT).show();
-                        // TODO: Bagian backend untuk request API join room
+                        // TODO: request API join room
                     } else {
                         Toast.makeText(this, "Aksi dibatalkan: Kolom input kosong", Toast.LENGTH_SHORT).show();
                     }
