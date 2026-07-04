@@ -1,8 +1,8 @@
-# Iknos - Frontend Android (Java) 📍
+# Iknos - Frontend Android (Java)
 
 Repositori ini berisi kode sumber *frontend* untuk aplikasi **Iknos**, sebuah aplikasi pemantauan lokasi *real-time* berbasis koordinasi sosial. Seluruh antarmuka UI telah disesuaikan dengan tema *Dark Mode* minimalis menggunakan warna aksen hijau neon `#00E676`.
 
-## 📑 Daftar Isi MVP & Cakupan Frontend
+## Daftar Isi MVP & Cakupan Frontend
 1. **Autentikasi & Otorisasi**: Halaman Login & Register dengan validasi input dasar
 2. **Manajemen Room**: Menampilkan daftar ruangan (maksimal 5 *room*), fitur pembuatan ruangan baru, fitur bergabung ke ruangan via kode, dan tombol *Logout*.
 3. **Peta Interaktif & WebSocket Kontrol**: Menggunakan kontainer `WebView` untuk merender canvas dari `mapcn.dev`, dilengkapi *top panel* jumlah pengguna (maksimal 10 pengguna) dan *bottom panel* untuk toggle "Hide Location".
@@ -10,7 +10,7 @@ Repositori ini berisi kode sumber *frontend* untuk aplikasi **Iknos**, sebuah ap
 
 ---
 
-## 🛠️ Panduan Integrasi Backend & WebSocket
+## Panduan Integrasi Backend & WebSocket
 
 Untuk memudahkan proses *wiring* (penyambungan) logika backend ke komponen UI yang sudah siap pakai, berikut adalah panduan titik integrasi pada kelas-kelas Java:
 
@@ -39,7 +39,7 @@ Untuk memudahkan proses *wiring* (penyambungan) logika backend ke komponen UI ya
 
 ---
 
-## 🚀 Libraries Terpasang (`build.gradle.kts`)
+## Libraries Terpasang (`build.gradle.kts`)
 Aplikasi ini sudah dilengkapi dengan beberapa dependensi penting:
 * `OkHttp (v4.12.0)`: Siap digunakan untuk koneksi *WebSocket client*.
 * `Glide (v4.16.0)` & `CircleImageView (v3.1.0)`: Siap digunakan untuk merender foto profil pengguna menjadi bulat secara dinamis di atas peta.
