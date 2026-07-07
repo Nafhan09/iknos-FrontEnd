@@ -13,11 +13,12 @@
         android:id="@+id/tvStatusUsername"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_marginBottom="16dp"
+        android:fontFamily="@font/poppins_bold"
         android:text="Pawas Gay Status"
         android:textColor="#00E676"
         android:textSize="18sp"
-        android:textStyle="bold"
-        android:layout_marginBottom="16dp"/>
+        android:textStyle="bold" />
 
     <com.google.android.material.card.MaterialCardView
         android:layout_width="200dp"
@@ -40,12 +41,12 @@
         android:id="@+id/tvReceivedNoteText"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:fontFamily="@font/poppins_bold"
+        android:gravity="center"
         android:text='"Lagi OTW ke lokasi CFD nih guys!"'
         android:textColor="#FFFFFF"
-        android:textSize="15sp"
-        android:gravity="center"
-        android:fontFamily="sans-serif-medium"
-        android:layout_marginTop="8dp"/>
+        android:textSize="15sp" />
 
 </LinearLayout>
 

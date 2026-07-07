@@ -27,6 +27,7 @@
                 android:id="@+id/tvItemRoomName"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:fontFamily="@font/poppins_bold"
                 android:text="Room Koordinasi Merdeka"
                 android:textColor="#FFFFFF"
                 android:textSize="16sp"
@@ -46,10 +47,11 @@
             android:id="@+id/tvItemMemberCount"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:fontFamily="@font/poppins_bold"
             android:text="5/10"
             android:textColor="#00E676"
-            android:textStyle="bold"
-            android:textSize="14sp" />
+            android:textSize="14sp"
+            android:textStyle="bold" />
 
     </LinearLayout>
 </com.google.android.material.card.MaterialCardView>

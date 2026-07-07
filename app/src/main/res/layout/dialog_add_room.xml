@@ -10,15 +10,17 @@
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_marginBottom="16dp"
+        android:fontFamily="@font/poppins_bold"
         android:text="TAMBAH RUANGAN"
         android:textColor="#00E676"
         android:textSize="18sp"
-        android:textStyle="bold"
-        android:layout_marginBottom="16dp"/>
+        android:textStyle="bold" />
 
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:fontFamily="@font/poppins_bold"
         android:text="Buat Ruangan Baru"
         android:textColor="#FFFFFF"
         android:textSize="14sp"
@@ -49,6 +51,7 @@
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:fontFamily="@font/poppins_bold"
         android:text="Gabung Ruangan Yang Sudah Ada"
         android:textColor="#FFFFFF"
         android:textSize="14sp"

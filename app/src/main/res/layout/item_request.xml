@@ -14,10 +14,11 @@
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_weight="1"
+        android:fontFamily="@font/poppins_bold"
         android:text="User_Budi99"
         android:textColor="#FFFFFF"
         android:textSize="14sp"
-        android:textStyle="bold"/>
+        android:textStyle="bold" />
 
     <Button
         android:id="@+id/btnDecline"
