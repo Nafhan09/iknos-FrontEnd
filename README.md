@@ -45,3 +45,7 @@ Aplikasi ini sudah dilengkapi dengan beberapa dependensi penting:
 * `Glide (v4.16.0)` & `CircleImageView (v3.1.0)`: Siap digunakan untuk merender foto profil pengguna menjadi bulat secara dinamis di atas peta.
 
 ---
+
+## Update
+1. Menambahkan Button Request pada halaman activity_room.xml
+2. Menabahkan Desain Popup Untuk Menerima Request Dari Userr
