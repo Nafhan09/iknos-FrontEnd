@@ -26,36 +26,40 @@
         android:id="@+id/tvRoomSubtitle"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_marginTop="4dp"
+        android:fontFamily="@font/poppins_bold"
         android:text="Maksimal 5 ruangan aktif"
         android:textColor="#888888"
         android:textSize="12sp"
-        app:layout_constraintTop_toBottomOf="@id/tvRoomTitle"
-        app:layout_constraintStart_toStartOf="parent" />
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/tvRoomTitle" />
 
     <Button
         android:id="@+id/btnLogout"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:backgroundTint="#D32F2F"
+        android:fontFamily="@font/poppins_bold"
         android:text="LOGOUT"
         android:textColor="#FFFFFF"
-        android:backgroundTint="#D32F2F"
         android:textSize="12sp"
-        android:layout_marginTop="16dp"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintEnd_toEndOf="parent" />
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
 
     <Button
         android:id="@+id/btnJoinRequests"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="REQUESTS"
-        android:textColor="#000000"
-        android:backgroundTint="#00E676"
-        android:textSize="12sp"
         android:layout_marginTop="16dp"
         android:layout_marginEnd="8dp"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintEnd_toStartOf="@id/btnLogout" />
+        android:backgroundTint="#00E676"
+        android:fontFamily="@font/poppins_bold"
+        android:text="REQUESTS"
+        android:textColor="#000000"
+        android:textSize="12sp"
+        app:layout_constraintEnd_toStartOf="@id/btnLogout"
+        app:layout_constraintTop_toTopOf="parent" />
 
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/rvRooms"
