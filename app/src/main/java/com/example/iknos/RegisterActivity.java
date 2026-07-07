@@ -6,6 +6,9 @@ import android.widget.TextView;
 import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
 import com.google.android.material.textfield.TextInputEditText;
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
 
 public class RegisterActivity extends AppCompatActivity {
 
@@ -26,17 +29,57 @@ public class RegisterActivity extends AppCompatActivity {
 
         // Aksi ketika tombol daftar ditekan
         btnRegister.setOnClickListener(v -> {
-            String username = etRegUsername.getText().toString().trim();
-            String email = etRegEmail.getText().toString().trim();
-            String password = etRegPassword.getText().toString().trim();
 
-            if (username.isEmpty() || email.isEmpty() || password.isEmpty()) {
-                Toast.makeText(this, "Semua kolom harus diisi!", Toast.LENGTH_SHORT).show();
-            } else {
-                // TODO: fungsi hit API Register
-                Toast.makeText(this, "Registrasi Berhasil! Silakan Login.", Toast.LENGTH_SHORT).show();
-                finish(); // Kembali ke halaman Login
+            String usernameInput = etRegUsername.getText().toString().trim();
+            String emailInput = etRegEmail.getText().toString().trim();
+            String passwordInput = etRegPassword.getText().toString().trim();
+
+            if (usernameInput.isEmpty() || emailInput.isEmpty() || passwordInput.isEmpty()) {
+                Toast.makeText(RegisterActivity.this,
+                        "Semua kolom harus diisi!",
+                        Toast.LENGTH_SHORT).show();
+                return;
             }
+
+            IknosApiService apiService =
+                    RetrofitClient.getClient(RegisterActivity.this)
+                            .create(IknosApiService.class);
+
+            RegisterRequest request =
+                    new RegisterRequest(usernameInput, emailInput, passwordInput);
+
+            apiService.register(request).enqueue(new Callback<LoginResponse>() {
+
+                @Override
+                public void onResponse(Call<LoginResponse> call,
+                                       Response<LoginResponse> response) {
+
+                    if (response.isSuccessful()
+                            && response.body() != null
+                            && response.body().isSuccess()) {
+
+                        Toast.makeText(RegisterActivity.this,
+                                "Registrasi Berhasil! Silakan Login.",
+                                Toast.LENGTH_SHORT).show();
+
+                        finish();
+
+                    } else {
+
+                        Toast.makeText(RegisterActivity.this,
+                                "Registrasi Gagal! Email/Username mungkin sudah terpakai.",
+                                Toast.LENGTH_SHORT).show();
+                    }
+                }
+
+                @Override
+                public void onFailure(Call<LoginResponse> call, Throwable t) {
+
+                    Toast.makeText(RegisterActivity.this,
+                            "Error Koneksi: " + t.getMessage(),
+                            Toast.LENGTH_SHORT).show();
+                }
+            });
         });
 
         // Kembali ke halaman Login jika sudah punya akun

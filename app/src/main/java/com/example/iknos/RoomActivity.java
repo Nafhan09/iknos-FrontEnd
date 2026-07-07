@@ -17,12 +17,25 @@ import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.textfield.TextInputEditText;
 import java.util.ArrayList;
 import java.util.List;
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
+
+import com.example.iknos.RetrofitClient;
+import com.example.iknos.IknosApiService;
+import com.example.iknos.CreateRoomRequest;
+import com.example.iknos.CreateRoomResponse;
+import com.example.iknos.RoomModel;
 
 public class RoomActivity extends AppCompatActivity {
 
     private RecyclerView rvRooms;
     private FloatingActionButton fabAddRoom;
     private Button btnLogout;
+    private final List<RoomModel> roomList = new ArrayList<>();
+    private RecyclerView.Adapter<RoomViewHolder> roomAdapter;
+
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -36,12 +49,9 @@ public class RoomActivity extends AppCompatActivity {
         // Setup RecyclerView
         rvRooms.setLayoutManager(new LinearLayoutManager(this));
 
-        List<String[]> mockRoomList = new ArrayList<>();
-        mockRoomList.add(new String[]{"Room Liburan Keluarga", "Code: FAM-123", "4/10"});
-        mockRoomList.add(new String[]{"Tim Dev Iknos Project", "Code: IKNS-99", "2/10"});
-        mockRoomList.add(new String[]{"Koordinasi CFD Jakarta", "Code: CFD-202", "8/10"});
 
-        rvRooms.setAdapter(new RecyclerView.Adapter<RoomViewHolder>() {
+
+        roomAdapter = new RecyclerView.Adapter<RoomViewHolder>() {
             @NonNull
             @Override
             public RoomViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
@@ -51,23 +61,29 @@ public class RoomActivity extends AppCompatActivity {
 
             @Override
             public void onBindViewHolder(@NonNull RoomViewHolder holder, int position) {
-                String[] roomData = mockRoomList.get(position);
-                holder.tvName.setText(roomData[0]);
-                holder.tvCode.setText(roomData[1]);
-                holder.tvCount.setText(roomData[2]);
+                RoomModel roomData = roomList.get(position);
+                holder.tvName.setText(roomData.getName());
+                holder.tvCode.setText("Code: " + roomData.getCode());
+
+                // sementara backend belum mengirim jumlah member
+                holder.tvCount.setText("-");
 
                 holder.itemView.setOnClickListener(v -> {
                     Intent intent = new Intent(RoomActivity.this, MainActivity.class);
-                    intent.putExtra("ROOM_NAME", roomData[0]);
+                    intent.putExtra("ROOM_NAME", roomData.getName());
+                    intent.putExtra("ROOM_ID", roomData.getId());
                     startActivity(intent);
                 });
             }
 
             @Override
             public int getItemCount() {
-                return mockRoomList.size();
+                return roomList.size();
             }
-        });
+        };
+
+        rvRooms.setAdapter(roomAdapter);
+        fetchRealRooms();
 
         // Fitur Logout
         btnLogout.setOnClickListener(v -> {
@@ -92,24 +108,190 @@ public class RoomActivity extends AppCompatActivity {
         new MaterialAlertDialogBuilder(this, com.google.android.material.R.style.ThemeOverlay_Material3_MaterialAlertDialog)
                 .setView(dialogView)
                 .setPositiveButton("Proses", (dialog, which) -> {
-                    String newRoomName = etNewRoomName.getText() != null ? etNewRoomName.getText().toString().trim() : "";
-                    String joinRoomCode = etJoinRoomCode.getText() != null ? etJoinRoomCode.getText().toString().trim() : "";
 
-                    if (!newRoomName.isEmpty()) {
-                        // User membuat room baru
-                        Toast.makeText(this, "Membuat room: " + newRoomName + " (Proses Backend)", Toast.LENGTH_SHORT).show();
-                        // TODO: request API create room
-                    } else if (!joinRoomCode.isEmpty()) {
-                        // User bergabung dengan room yang ada
-                        Toast.makeText(this, "Bergabung ke kode: " + joinRoomCode + " (Proses Backend)", Toast.LENGTH_SHORT).show();
-                        // TODO: request API join room
-                    } else {
-                        Toast.makeText(this, "Aksi dibatalkan: Kolom input kosong", Toast.LENGTH_SHORT).show();
+                    String roomNameInput = etNewRoomName.getText() != null
+                            ? etNewRoomName.getText().toString().trim()
+                            : "";
+
+                    String joinRoomCode = etJoinRoomCode.getText() != null
+                            ? etJoinRoomCode.getText().toString().trim()
+                            : "";
+
+                    // ==========================
+                    // CREATE ROOM
+                    // ==========================
+                    if (!roomNameInput.isEmpty()) {
+
+                        IknosApiService apiService =
+                                RetrofitClient.getClient(RoomActivity.this)
+                                        .create(IknosApiService.class);
+
+                        CreateRoomRequest request =
+                                new CreateRoomRequest(roomNameInput);
+
+                        apiService.createRoom(request).enqueue(new Callback<CreateRoomResponse>() {
+
+                            @Override
+                            public void onResponse(Call<CreateRoomResponse> call,
+                                                   Response<CreateRoomResponse> response) {
+
+                                if (response.isSuccessful()
+                                        && response.body() != null
+                                        && response.body().isSuccess()) {
+
+                                    RoomModel newRoom = response.body().getData();
+
+                                    Toast.makeText(
+                                            RoomActivity.this,
+                                            "Room berhasil dibuat!\nKode: " + newRoom.getCode(),
+                                            Toast.LENGTH_LONG
+                                    ).show();
+
+                                    // Refresh daftar room
+                                    fetchRealRooms();
+
+                                } else {
+
+                                    Toast.makeText(
+                                            RoomActivity.this,
+                                            "Gagal membuat room. Maksimal 5 room.",
+                                            Toast.LENGTH_SHORT
+                                    ).show();
+
+                                }
+                            }
+
+                            @Override
+                            public void onFailure(Call<CreateRoomResponse> call,
+                                                  Throwable t) {
+
+                                Toast.makeText(
+                                        RoomActivity.this,
+                                        "Error koneksi: " + t.getMessage(),
+                                        Toast.LENGTH_SHORT
+                                ).show();
+
+                            }
+                        });
+
                     }
+
+                    // ==========================
+                    // JOIN ROOM
+                    // ==========================
+                    else if (!joinRoomCode.isEmpty()) {
+
+                        IknosApiService apiService =
+                                RetrofitClient.getClient(RoomActivity.this)
+                                        .create(IknosApiService.class);
+
+                        JoinRoomRequest request = new JoinRoomRequest(joinRoomCode);
+
+                        apiService.joinRoom(request).enqueue(new Callback<CreateRoomResponse>() {
+
+                            @Override
+                            public void onResponse(Call<CreateRoomResponse> call,
+                                                   Response<CreateRoomResponse> response) {
+
+                                if (response.isSuccessful()
+                                        && response.body() != null
+                                        && response.body().isSuccess()) {
+
+                                    Toast.makeText(
+                                            RoomActivity.this,
+                                            "Permintaan bergabung dikirim.\nMenunggu persetujuan Owner!",
+                                            Toast.LENGTH_LONG
+                                    ).show();
+
+                                    fetchRealRooms();
+
+                                } else {
+
+                                    Toast.makeText(
+                                            RoomActivity.this,
+                                            "Gagal join room. Cek kembali kode room.",
+                                            Toast.LENGTH_SHORT
+                                    ).show();
+
+                                }
+
+                            }
+
+                            @Override
+                            public void onFailure(Call<CreateRoomResponse> call,
+                                                  Throwable t) {
+
+                                Toast.makeText(
+                                        RoomActivity.this,
+                                        "Error: " + t.getMessage(),
+                                        Toast.LENGTH_SHORT
+                                ).show();
+
+                            }
+
+                        });
+
+                    }
+
+                    else {
+
+                        Toast.makeText(
+                                RoomActivity.this,
+                                "Nama room atau kode room harus diisi!",
+                                Toast.LENGTH_SHORT
+                        ).show();
+
+                    }
+
                 })
                 .setNegativeButton("Batal", (dialog, which) -> dialog.dismiss())
                 .show();
     }
+
+    private void fetchRealRooms() {
+
+        IknosApiService apiService =
+                RetrofitClient.getClient(RoomActivity.this)
+                        .create(IknosApiService.class);
+
+        apiService.getMyRooms().enqueue(new Callback<RoomListResponse>() {
+
+            @Override
+            public void onResponse(Call<RoomListResponse> call,
+                                   Response<RoomListResponse> response) {
+
+                if (response.isSuccessful()
+                        && response.body() != null
+                        && response.body().isSuccess()) {
+
+                    roomList.clear();
+                    roomList.addAll(response.body().getData());
+
+                    roomAdapter.notifyDataSetChanged();
+
+                } else {
+
+                    Toast.makeText(RoomActivity.this,
+                            "Gagal mengambil daftar room",
+                            Toast.LENGTH_SHORT).show();
+
+                }
+
+            }
+
+            @Override
+            public void onFailure(Call<RoomListResponse> call,
+                                  Throwable t) {
+
+                Toast.makeText(RoomActivity.this,
+                        t.getMessage(),
+                        Toast.LENGTH_SHORT).show();
+
+            }
+        });
+
+    }
+
 
     static class RoomViewHolder extends RecyclerView.ViewHolder {
         TextView tvName, tvCode, tvCount;

@@ -5,8 +5,20 @@ import android.os.Bundle;
 import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
+import android.content.SharedPreferences;
 import androidx.appcompat.app.AppCompatActivity;
+
+import com.example.iknos.IknosApiService;
+import com.example.iknos.RetrofitClient;
+import com.example.iknos.LoginRequest;
+import com.example.iknos.LoginResponse;
+
 import com.google.android.material.textfield.TextInputEditText;
+
+
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
 
 public class LoginActivity extends AppCompatActivity {
 
@@ -26,21 +38,57 @@ public class LoginActivity extends AppCompatActivity {
 
         // Aksi ketika tombol login ditekan
         btnLogin.setOnClickListener(v -> {
-            if (etEmail.getText() != null && etPassword.getText() != null) {
-                String email = etEmail.getText().toString().trim();
-                String password = etPassword.getText().toString().trim();
 
-                if (email.isEmpty() || password.isEmpty()) {
-                    Toast.makeText(this, "Semua kolom harus diisi!", Toast.LENGTH_SHORT).show();
-                } else {
-                    Toast.makeText(this, "Login Berhasil (Mock)", Toast.LENGTH_SHORT).show();
+            String emailInput = etEmail.getText().toString().trim();
+            String passwordInput = etPassword.getText().toString().trim();
 
-                    // Masuk ke halaman room
-                    Intent intent = new Intent(LoginActivity.this, RoomActivity.class);
-                    startActivity(intent);
-                    finish();
-                }
+            if (emailInput.isEmpty() || passwordInput.isEmpty()) {
+                Toast.makeText(LoginActivity.this, "Semua kolom harus diisi!", Toast.LENGTH_SHORT).show();
+                return;
             }
+
+            // Jalankan Retrofit
+            IknosApiService apiService =
+                    RetrofitClient.getClient(LoginActivity.this)
+                            .create(IknosApiService.class);
+            LoginRequest request = new LoginRequest(emailInput, passwordInput);
+
+            apiService.login(request).enqueue(new Callback<LoginResponse>() {
+                @Override
+                public void onResponse(Call<LoginResponse> call, Response<LoginResponse> response) {
+
+                    if (response.isSuccessful()
+                            && response.body() != null
+                            && response.body().isSuccess()) {
+
+                        // Ambil token dari backend
+                        String jwtToken = response.body().getData().getToken();
+
+                        // Simpan token
+                        SharedPreferences pref = getSharedPreferences("IknosPref", MODE_PRIVATE);
+                        pref.edit().putString("JWT_TOKEN", jwtToken).apply();
+
+                        Toast.makeText(LoginActivity.this, "Login Berhasil!", Toast.LENGTH_SHORT).show();
+
+                        // Pindah ke RoomActivity
+                        Intent intent = new Intent(LoginActivity.this, RoomActivity.class);
+                        startActivity(intent);
+                        finish();
+
+                    } else {
+                        Toast.makeText(LoginActivity.this,
+                                "Login Gagal! Cek email/password.",
+                                Toast.LENGTH_SHORT).show();
+                    }
+                }
+
+                @Override
+                public void onFailure(Call<LoginResponse> call, Throwable t) {
+                    Toast.makeText(LoginActivity.this,
+                            "Error Koneksi: " + t.getMessage(),
+                            Toast.LENGTH_SHORT).show();
+                }
+            });
         });
 
         // Pindah ke halaman Register
