@@ -61,15 +61,19 @@ public class LoginActivity extends AppCompatActivity {
                             && response.body() != null
                             && response.body().isSuccess()) {
 
-                        // Ambil token dari backend
+                        // Ambil token dan id user dari backend
                         String jwtToken = response.body().getData().getToken();
+                        String userId = response.body().getData().getUser().getId();
 
                         // TAMBAHKAN BARIS INI: Hubungkan ke Socket.IO server
                         SocketManager.getInstance().connectSocket(jwtToken);
 
-                        // Simpan token
+                        // Simpan token dan userId
                         SharedPreferences pref = getSharedPreferences("IknosPref", MODE_PRIVATE);
-                        pref.edit().putString("JWT_TOKEN", jwtToken).apply();
+                        pref.edit()
+                                .putString("JWT_TOKEN", jwtToken)
+                                .putString("USER_ID", userId)
+                                .apply();
 
                         Toast.makeText(LoginActivity.this, "Login Berhasil!", Toast.LENGTH_SHORT).show();
 

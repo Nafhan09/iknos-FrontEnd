@@ -62,6 +62,7 @@ dependencies {
     annotationProcessor("com.github.bumptech.glide:compiler:4.16.0")
 
     implementation("com.google.android.gms:play-services-location:21.3.0")
+    implementation("org.maplibre.gl:android-sdk:13.3.1")
 
     implementation("io.socket:socket.io-client:2.1.1") {
         exclude(group = "org.json", module = "json")

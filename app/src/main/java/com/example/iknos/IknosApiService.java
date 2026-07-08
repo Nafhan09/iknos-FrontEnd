@@ -1,5 +1,7 @@
 package com.example.iknos;
 
+import com.example.iknos.room.RoomDetailResponse;
+
 import retrofit2.Call;
 import retrofit2.http.Body;
 import retrofit2.http.PATCH;
@@ -29,4 +31,6 @@ public interface IknosApiService {
     Call<BaseResponse> handleJoinRequest(@Path("requestId") String requestId, @Body ApprovalBody body);
 
     // Tambahkan endpoint lain di sini nanti
+    @GET("rooms/{roomId}")
+    Call<RoomDetailResponse> getRoomDetail(@Path("roomId") String roomId);
 }
