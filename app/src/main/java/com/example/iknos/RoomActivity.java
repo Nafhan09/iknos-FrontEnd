@@ -34,6 +34,9 @@ public class RoomActivity extends AppCompatActivity {
     private Button btnLogout;
     private final List<RoomModel> roomList = new ArrayList<>();
     private RecyclerView.Adapter<RoomViewHolder> roomAdapter;
+    private Button btnJoinRequests;
+
+
 
 
 
@@ -45,6 +48,26 @@ public class RoomActivity extends AppCompatActivity {
         rvRooms = findViewById(R.id.rvRooms);
         fabAddRoom = findViewById(R.id.fabAddRoom);
         btnLogout = findViewById(R.id.btnLogout);
+        btnJoinRequests = findViewById(R.id.btnJoinRequests);
+
+        btnJoinRequests.setOnClickListener(v -> {
+
+            if (roomList.isEmpty()) {
+
+                Toast.makeText(
+                        RoomActivity.this,
+                        "Belum ada room",
+                        Toast.LENGTH_SHORT
+                ).show();
+
+                return;
+            }
+
+            String roomId = roomList.get(0).getId();
+
+            loadPendingRequests(roomId);
+
+        });
 
         // Setup RecyclerView
         rvRooms.setLayoutManager(new LinearLayoutManager(this));
@@ -248,6 +271,8 @@ public class RoomActivity extends AppCompatActivity {
                 .show();
     }
 
+
+
     private void fetchRealRooms() {
 
         IknosApiService apiService =
@@ -292,6 +317,115 @@ public class RoomActivity extends AppCompatActivity {
 
     }
 
+    private void loadPendingRequests(String roomId) {
+
+        IknosApiService apiService =
+                RetrofitClient.getClient(RoomActivity.this)
+                        .create(IknosApiService.class);
+
+        apiService.getPendingRequests(roomId)
+                .enqueue(new Callback<RequestListResponse>() {
+
+                    @Override
+                    public void onResponse(Call<RequestListResponse> call,
+                                           Response<RequestListResponse> response) {
+
+                        if(response.isSuccessful()
+                                && response.body()!=null
+                                && response.body().isSuccess()){
+
+                            List<JoinRequestModel> requests =
+                                    response.body().getData();
+
+                            showRequestDialog(requests);
+
+                        }
+
+                    }
+
+                    @Override
+                    public void onFailure(Call<RequestListResponse> call,
+                                          Throwable t) {
+
+                        Toast.makeText(
+                                RoomActivity.this,
+                                t.getMessage(),
+                                Toast.LENGTH_SHORT
+                        ).show();
+
+                    }
+
+                });
+
+    }
+
+
+    private void showRequestDialog(List<JoinRequestModel> requests) {
+
+        View dialogView = LayoutInflater.from(this)
+                .inflate(R.layout.dialog_request, null);
+
+        RecyclerView rvRequests = dialogView.findViewById(R.id.rvRequests);
+
+        rvRequests.setLayoutManager(new LinearLayoutManager(this));
+
+        RequestAdapter adapter =
+                new RequestAdapter(this, requests);
+
+        rvRequests.setAdapter(adapter);
+
+        new MaterialAlertDialogBuilder(this)
+                .setTitle("Permintaan Bergabung")
+                .setView(dialogView)
+                .setNegativeButton("Tutup", null)
+                .show();
+    }
+
+    public void approveOrRejectUser(String requestId,
+                                    String actionName,
+                                    String roomId) {
+
+        IknosApiService apiService =
+                RetrofitClient.getClient(RoomActivity.this)
+                        .create(IknosApiService.class);
+
+        ApprovalBody body = new ApprovalBody(actionName);
+
+        apiService.handleJoinRequest(requestId, body)
+                .enqueue(new Callback<BaseResponse>() {
+
+                    @Override
+                    public void onResponse(Call<BaseResponse> call,
+                                           Response<BaseResponse> response) {
+
+                        if (response.isSuccessful()
+                                && response.body() != null
+                                && response.body().isSuccess()) {
+
+                            Toast.makeText(
+                                    RoomActivity.this,
+                                    "Request berhasil di-" + actionName,
+                                    Toast.LENGTH_SHORT
+                            ).show();
+
+                            loadPendingRequests(roomId);
+                        }
+                    }
+
+                    @Override
+                    public void onFailure(Call<BaseResponse> call,
+                                          Throwable t) {
+
+                        Toast.makeText(
+                                RoomActivity.this,
+                                "Error: " + t.getMessage(),
+                                Toast.LENGTH_SHORT
+                        ).show();
+
+                    }
+
+                });
+    }
 
     static class RoomViewHolder extends RecyclerView.ViewHolder {
         TextView tvName, tvCode, tvCount;

@@ -48,4 +48,4 @@ Aplikasi ini sudah dilengkapi dengan beberapa dependensi penting:
 
 ## Update
 1. Menambahkan Button Request pada halaman activity_room.xml
-2. Menabahkan Desain Popup Untuk Menerima Request Dari Userr
+2. Menabahkan Desain Popup Untuk Menerima Request Dari Userr di item_room.xml

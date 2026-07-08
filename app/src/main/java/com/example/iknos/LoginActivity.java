@@ -64,6 +64,9 @@ public class LoginActivity extends AppCompatActivity {
                         // Ambil token dari backend
                         String jwtToken = response.body().getData().getToken();
 
+                        // TAMBAHKAN BARIS INI: Hubungkan ke Socket.IO server
+                        SocketManager.getInstance().connectSocket(jwtToken);
+
                         // Simpan token
                         SharedPreferences pref = getSharedPreferences("IknosPref", MODE_PRIVATE);
                         pref.edit().putString("JWT_TOKEN", jwtToken).apply();
