@@ -1,4 +1,4 @@
-package com.example.iknos;
+package com.example.iknos.ui;
 
 import android.view.LayoutInflater;
 import android.view.View;
@@ -8,6 +8,9 @@ import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
+
+import com.example.iknos.R;
+import com.example.iknos.models.JoinRequestModel;
 
 import java.util.List;
 

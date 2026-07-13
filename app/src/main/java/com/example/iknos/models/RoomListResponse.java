@@ -1,4 +1,4 @@
-package com.example.iknos;
+package com.example.iknos.models;
 
 import java.util.List;
 

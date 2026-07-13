@@ -1,10 +1,16 @@
-package com.example.iknos;
+package com.example.iknos.ui;
 
 import android.os.Bundle;
 import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
+
+import com.example.iknos.R;
+import com.example.iknos.network.IknosApiService;
+import com.example.iknos.models.LoginResponse;
+import com.example.iknos.models.RegisterRequest;
+import com.example.iknos.network.RetrofitClient;
 import com.google.android.material.textfield.TextInputEditText;
 import retrofit2.Call;
 import retrofit2.Callback;

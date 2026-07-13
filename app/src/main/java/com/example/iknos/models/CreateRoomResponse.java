@@ -1,4 +1,4 @@
-package com.example.iknos;
+package com.example.iknos.models;
 
 public class CreateRoomResponse {
     private boolean success;

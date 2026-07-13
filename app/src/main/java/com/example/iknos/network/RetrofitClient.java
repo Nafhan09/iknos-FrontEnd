@@ -1,4 +1,4 @@
-package com.example.iknos;
+package com.example.iknos.network;
 
 import android.content.Context;
 import android.content.SharedPreferences;

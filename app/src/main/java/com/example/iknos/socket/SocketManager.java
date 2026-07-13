@@ -1,4 +1,4 @@
-package com.example.iknos;
+package com.example.iknos.socket;
 
 import android.util.Log;
 import io.socket.client.IO;

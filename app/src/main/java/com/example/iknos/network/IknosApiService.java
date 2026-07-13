@@ -1,5 +1,15 @@
-package com.example.iknos;
+package com.example.iknos.network;
 
+import com.example.iknos.models.ApprovalBody;
+import com.example.iknos.models.BaseResponse;
+import com.example.iknos.models.CreateRoomRequest;
+import com.example.iknos.models.CreateRoomResponse;
+import com.example.iknos.models.JoinRoomRequest;
+import com.example.iknos.models.LoginRequest;
+import com.example.iknos.models.LoginResponse;
+import com.example.iknos.models.RegisterRequest;
+import com.example.iknos.models.RequestListResponse;
+import com.example.iknos.models.RoomListResponse;
 import com.example.iknos.room.RoomDetailResponse;
 
 import retrofit2.Call;

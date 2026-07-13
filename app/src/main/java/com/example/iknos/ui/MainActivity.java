@@ -1,4 +1,4 @@
-package com.example.iknos;
+package com.example.iknos.ui;
 
 import android.content.Intent;
 import android.graphics.Bitmap;
@@ -15,7 +15,6 @@ import org.maplibre.android.camera.CameraPosition;
 import org.maplibre.android.geometry.LatLng;
 import org.maplibre.android.maps.MapLibreMap;
 import org.maplibre.android.maps.MapView;
-import org.maplibre.android.maps.Style;
 
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.request.target.CustomTarget;
@@ -31,8 +30,12 @@ import android.widget.Toast;
 import androidx.activity.OnBackPressedCallback;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
-import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
+
+import com.example.iknos.R;
+import com.example.iknos.network.IknosApiService;
+import com.example.iknos.network.RetrofitClient;
+import com.example.iknos.socket.SocketManager;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.google.android.material.materialswitch.MaterialSwitch;
 import com.google.android.material.textfield.TextInputEditText;
@@ -52,7 +55,6 @@ import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationResult;
 import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.location.Priority;
-import androidx.annotation.NonNull;
 import com.example.iknos.room.RoomDetailResponse;
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -60,7 +62,6 @@ import retrofit2.Response;
 
 import org.json.JSONException;
 import org.json.JSONObject;
-import org.json.JSONArray;
 
 public class MainActivity extends AppCompatActivity {
 

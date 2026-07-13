@@ -1,4 +1,4 @@
-package com.example.iknos;
+package com.example.iknos.ui;
 
 import android.content.Intent;
 import android.os.Bundle;
@@ -8,11 +8,13 @@ import android.widget.Toast;
 import android.content.SharedPreferences;
 import androidx.appcompat.app.AppCompatActivity;
 
-import com.example.iknos.IknosApiService;
-import com.example.iknos.RetrofitClient;
-import com.example.iknos.LoginRequest;
-import com.example.iknos.LoginResponse;
+import com.example.iknos.R;
+import com.example.iknos.network.IknosApiService;
+import com.example.iknos.models.LoginRequest;
+import com.example.iknos.models.LoginResponse;
 
+import com.example.iknos.network.RetrofitClient;
+import com.example.iknos.socket.SocketManager;
 import com.google.android.material.textfield.TextInputEditText;
 
 

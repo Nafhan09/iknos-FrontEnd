@@ -3,49 +3,55 @@
 Repositori ini berisi kode sumber *frontend* untuk aplikasi **Iknos**, sebuah aplikasi pemantauan lokasi *real-time* berbasis koordinasi sosial. Seluruh antarmuka UI telah disesuaikan dengan tema *Dark Mode* minimalis menggunakan warna aksen hijau neon `#00E676`.
 
 ## Daftar Isi MVP & Cakupan Frontend
-1. **Autentikasi & Otorisasi**: Halaman Login & Register dengan validasi input dasar
-2. **Manajemen Room**: Menampilkan daftar ruangan (maksimal 5 *room*), fitur pembuatan ruangan baru, fitur bergabung ke ruangan via kode, dan tombol *Logout*.
-3. **Peta Interaktif & WebSocket Kontrol**: Menggunakan kontainer `WebView` untuk merender canvas dari `mapcn.dev`, dilengkapi *top panel* jumlah pengguna (maksimal 10 pengguna) dan *bottom panel* untuk toggle "Hide Location".
-4. **Insta Note**: Dialog kustom terintegrasi dengan kamera sistem untuk melakukan pembaruan status teks, foto selfie, atau keduanya.
+1. **Autentikasi & Otorisasi**: Halaman Login & Register dengan integrasi REST API menggunakan Retrofit.
+2. **Manajemen Room**: Menampilkan daftar ruangan dari server, fitur pembuatan ruangan baru, fitur bergabung ke ruangan via kode, memproses permintaan bergabung (Approval), dan tombol *Logout*.
+3. **Peta Interaktif & WebSocket Kontrol**: Merender *native canvas* peta menggunakan `MapLibre SDK`, dilengkapi pengiriman/penerimaan koordinat GPS menggunakan *Socket.IO*, serta *bottom panel* untuk *toggle* "Hide Location".
+4. **Insta Note**: Dialog kustom terintegrasi dengan kamera sistem untuk memperbarui status teks dan foto selfie di dalam room.
 
 ---
 
-## Panduan Integrasi Backend & WebSocket
+## Struktur Folder (Arsitektur Proyek)
 
-Untuk memudahkan proses *wiring* (penyambungan) logika backend ke komponen UI yang sudah siap pakai, berikut adalah panduan titik integrasi pada kelas-kelas Java:
+Untuk memudahkan navigasi dan skalabilitas (*clean architecture*), *source code* Java pada `app/src/main/java/com/example/iknos/` telah dikelompokkan ke dalam beberapa *sub-package* sesuai ranah/domain fiturnya:
 
-### 1. Proses Autentikasi (`LoginActivity.java` & `RegisterActivity.java`)
-* **Titik Integrasi Login:** Buka `LoginActivity.java`. Tambahkan HTTP Request (Retrofit/Volley) di sana. Jika sukses, arahkan ke `RoomActivity.class`.
-* **Titik Integrasi Register:** Buka `RegisterActivity.java`, kirimkan data user baru.
+- **`ui/`** : Berisi tampilan interaktif dan *adapter* UI.
+  - *File:* `MainActivity.java`, `LoginActivity.java`, `RoomActivity.java`, `RegisterActivity.java`, `RequestAdapter.java`
+- **`models/`** : Berisi semua POJO (*Plain Old Java Object*), *data class*, form *request*, dan *response* dari API.
+  - *File:* `RoomModel.java`, `LoginRequest.java`, `BaseResponse.java`, `RoomDetailResponse.java`, dll.
+- **`network/`** : Berisi pengaturan HTTP Client dan definisi rute (*endpoint*).
+  - *File:* `RetrofitClient.java` dan antarmuka `IknosApiService.java`.
+- **`socket/`** : Berisi manajemen siklus hidup dan *wrapper* komunikasi WebSocket.
+  - *File:* `SocketManager.java` (Menangani inisiasi koneksi, `join_room`, sinkronisasi *snapshot*, dan *broadcast* koordinat).
+- **`map/`** : Berisi logika yang murni berhubungan dengan kanvas peta dan utilitas *marker*.
+  - *File:* `MapManager.java`, `MarkerUser.java`, `NoteMarkerView.java`.
 
-### 2. Manajemen & Batasan Room (`RoomActivity.java`)
-* **Mengisi List Room:** Saat ini `RecyclerView` menggunakan *mock data* (tiruan). Ubah *source* `mockRoomList` dengan data riil hasil *fetch* dari Firebase/PostgreSQL.
-* **Buat & Gabung Ruangan:** Cari fungsi `showAddRoomDialog()`. Di dalam blok *PositiveButton*, terdapat dua percabangan `// TODO:` untuk memicu fungsi API *Create Room* atau *Join Room*.
+---
 
-### 3. Canvas Peta `mapcn.dev` & Koordinat (`MainActivity.java`)
-* **URL Peta Kustom:** Cari baris `mapWebView.loadUrl("https://mapcn.dev/mock-map-dark");`. Ganti URL tiruan tersebut dengan URL visualisasi peta interaktif kalian yang valid.
-* **Limitasi Interval (10 Detik):** Pastikan skrip WebSocket pada URL peta tersebut melakukan pembaruan data koordinat dengan interval 10 detik
+## Fitur & Implementasi Utama Saat Ini
 
-### 4. Fitur Toggle "Hide My Location" (`MainActivity.java`)
-* **Logika Sakelar:** Cari komponen `switchHideLocation.setOnCheckedChangeListener`. 
-    * Kondisi `isChecked == true`: Kirim sinyal ke server/WebSocket untuk menghentikan siaran (*broadcast*) lokasi pengguna saat ini tanpa mengeluarkannya dari *Room*
-    * Kondisi `isChecked == false`: Mulai kembali pengiriman koordinat GPS.
+### 1. Proses Autentikasi (`ui/LoginActivity.java` & `ui/RegisterActivity.java`)
+Telah diintegrasikan sepenuhnya dengan backend menggunakan Retrofit. Pada saat *login* berhasil, aplikasi menyimpan `JWT_TOKEN` dan `USER_ID` di dalam `SharedPreferences` lalu menavigasikan pengguna ke daftar ruangan.
 
-### 5. Pengiriman Insta Note (`MainActivity.java`)
-* **Data Status:** Cari fungsi `showInstaNoteDialog()` di bagian tombol *Update*. 
-    * Teks status tersimpan pada variabel `statusText`.
-    * Foto selfie biner tersimpan pada variabel `capturedSelfieBitmap` (siap dikonversi ke Base64 atau Multipart Form Data).
-    * *Rule:* Data note baru ini harus menimpa/menghapus note lama pengguna di ruangan tersebut.
+### 2. Manajemen & Batasan Room (`ui/RoomActivity.java`)
+- **Daftar Room:** Data ruangan diambil secara *live* dari API backend melalui metode `getMyRooms()`.
+- **Aksi Pembuatan/Bergabung:** Pembuatan ruangan (maks 5 *room*) langsung direspons dengan kemunculan kode ruangan. Pengguna yang bergabung lewat kode akan masuk ke antrean *pending requests* untuk disetujui *owner* ruangan.
+- **Daftar Permintaan Bergabung:** (Owner) Bisa menerima atau menolak melalui *popup dialog request* khusus.
+
+### 3. Peta MapLibre & Pelacakan Real-time (`ui/MainActivity.java`)
+- **Native MapLibre:** Penggunaan `WebView` telah ditinggalkan dan sepenuhnya digantikan dengan pustaka `MapLibre` *native* untuk performa perenderan (terutama untuk merender *custom marker* wajah pengguna berbentuk bulat menggunakan *Glide*).
+- **Socket.IO:** Diotomatisasi melalui `socket/SocketManager.java` untuk mengambil *snapshot* lokasi setiap anggota pada saat membuka peta dan menangkap pembaruan (`location_broadcast`) tiap kali ada pergerakan pengguna lain (disesuaikan dengan jeda limitasi server).
+
+### 4. Fitur Toggle "Hide My Location"
+Membagikan lokasi bersifat opsional. Tombol sakelar akan meng-*emit* event `toggle_hide` ke *WebSocket* yang menghentikan *broadcast* lokasi pengguna saat ini di sisi *server* tanpa mengeluarkannya dari sesi *Room* secara permanen.
+
+### 5. Pengiriman Insta Note
+Menyediakan integrasi pemanggilan *Intent* kamera bawaan Android untuk memotret *selfie* cepat. Hasil pindaian dikembalikan dalam bentuk `Bitmap` yang siap di-*update* bersama *text note* untuk ditampilkan pada penanda *marker* peta anggota *Room*.
 
 ---
 
 ## Libraries Terpasang (`build.gradle.kts`)
-Aplikasi ini sudah dilengkapi dengan beberapa dependensi penting:
-* `OkHttp (v4.12.0)`: Siap digunakan untuk koneksi *WebSocket client*.
-* `Glide (v4.16.0)` & `CircleImageView (v3.1.0)`: Siap digunakan untuk merender foto profil pengguna menjadi bulat secara dinamis di atas peta.
-
----
-
-## Update
-1. Menambahkan Button Request pada halaman activity_room.xml
-2. Menabahkan Desain Popup Untuk Menerima Request Dari Userr di item_room.xml
+* `Retrofit (v2.9.0)` & `Gson`: HTTP Client dan *converter* JSON API.
+* `Socket.IO Client (v2.1.0)`: Penghubung WebSocket *real-time*.
+* `MapLibre Android SDK`: Mesin *render* peta vektor 3D performa tinggi.
+* `Glide (v4.16.0)` & `CircleImageView (v3.1.0)`: Manipulasi dan asinkron *loading* foto profil anggota ke peta.
+* `Play Services Location`: Manajemen kueri GPS akurat (`FusedLocationProviderClient`).

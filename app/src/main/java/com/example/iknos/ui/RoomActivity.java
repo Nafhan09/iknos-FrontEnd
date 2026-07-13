@@ -1,4 +1,4 @@
-package com.example.iknos;
+package com.example.iknos.ui;
 
 import android.content.Intent;
 import android.os.Bundle;
@@ -12,6 +12,16 @@ import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+
+import com.example.iknos.R;
+import com.example.iknos.models.RoomModel;
+import com.example.iknos.models.ApprovalBody;
+import com.example.iknos.models.BaseResponse;
+import com.example.iknos.models.JoinRequestModel;
+import com.example.iknos.models.JoinRoomRequest;
+import com.example.iknos.models.RequestListResponse;
+import com.example.iknos.models.RoomListResponse;
+import com.example.iknos.network.RetrofitClient;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.textfield.TextInputEditText;
@@ -21,11 +31,9 @@ import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 
-import com.example.iknos.RetrofitClient;
-import com.example.iknos.IknosApiService;
-import com.example.iknos.CreateRoomRequest;
-import com.example.iknos.CreateRoomResponse;
-import com.example.iknos.RoomModel;
+import com.example.iknos.network.IknosApiService;
+import com.example.iknos.models.CreateRoomRequest;
+import com.example.iknos.models.CreateRoomResponse;
 
 public class RoomActivity extends AppCompatActivity {
 
