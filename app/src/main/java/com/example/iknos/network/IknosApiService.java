@@ -10,13 +10,19 @@ import com.example.iknos.models.LoginResponse;
 import com.example.iknos.models.RegisterRequest;
 import com.example.iknos.models.RequestListResponse;
 import com.example.iknos.models.RoomListResponse;
+import com.example.iknos.models.UserProfileResponse;
 import com.example.iknos.room.RoomDetailResponse;
 
+import okhttp3.MultipartBody;
 import retrofit2.Call;
 import retrofit2.http.Body;
+import retrofit2.http.Header;
+import retrofit2.http.Multipart;
 import retrofit2.http.PATCH;
 import retrofit2.http.POST;
 import retrofit2.http.GET;
+import retrofit2.http.PUT;
+import retrofit2.http.Part;
 import retrofit2.http.Path;
 
 public interface IknosApiService {
@@ -31,16 +37,26 @@ public interface IknosApiService {
     Call<RoomListResponse> getMyRooms();
     @POST("rooms/join")
     Call<CreateRoomResponse> joinRoom(@Body JoinRoomRequest request);
-    // 1. Ambil list orang yang minta join berdasarkan ID Room
-
+    // Ambil list orang yang minta join berdasarkan ID Room
     @GET("rooms/{roomId}/requests")
     Call<RequestListResponse> getPendingRequests(@Path("roomId") String roomId);
 
-    // 2. Approve atau Reject request berdasarkan ID Request
+    // Approve atau Reject request berdasarkan ID Request
     @PATCH("rooms/requests/{requestId}")
     Call<BaseResponse> handleJoinRequest(@Path("requestId") String requestId, @Body ApprovalBody body);
 
-    // Tambahkan endpoint lain di sini nanti
+    // Ambil data roomId
     @GET("rooms/{roomId}")
     Call<RoomDetailResponse> getRoomDetail(@Path("roomId") String roomId);
+
+    // Mengambil data profil pengguna
+    @GET("users/me")
+    Call<UserProfileResponse> getUserProfile();
+
+    // Mengunggah/update foto profil
+    @Multipart
+    @PUT("users/me/avatar")
+    Call<UserProfileResponse> uploadAvatar(
+            @Part MultipartBody.Part avatar
+    );
 }

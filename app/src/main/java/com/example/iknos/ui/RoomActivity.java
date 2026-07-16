@@ -39,14 +39,9 @@ public class RoomActivity extends AppCompatActivity {
 
     private RecyclerView rvRooms;
     private FloatingActionButton fabAddRoom;
-    private Button btnLogout;
     private final List<RoomModel> roomList = new ArrayList<>();
     private RecyclerView.Adapter<RoomViewHolder> roomAdapter;
     private Button btnJoinRequests;
-
-
-
-
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -55,8 +50,13 @@ public class RoomActivity extends AppCompatActivity {
 
         rvRooms = findViewById(R.id.rvRooms);
         fabAddRoom = findViewById(R.id.fabAddRoom);
-        btnLogout = findViewById(R.id.btnLogout);
         btnJoinRequests = findViewById(R.id.btnJoinRequests);
+        FloatingActionButton fabSettings = findViewById(R.id.fabSettings);
+
+        fabSettings.setOnClickListener(v -> {
+            Intent intent = new Intent(RoomActivity.this, SettingsActivity.class);
+            startActivity(intent);
+        });
 
         btnJoinRequests.setOnClickListener(v -> {
 
@@ -115,16 +115,6 @@ public class RoomActivity extends AppCompatActivity {
 
         rvRooms.setAdapter(roomAdapter);
         fetchRealRooms();
-
-        // Fitur Logout
-        btnLogout.setOnClickListener(v -> {
-            Toast.makeText(this, "Logout berhasil", Toast.LENGTH_SHORT).show();
-            // Kembalikan pengguna ke halaman LoginActivity dan hapus tumpukan history activity
-            Intent intent = new Intent(RoomActivity.this, LoginActivity.class);
-            intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
-            startActivity(intent);
-            finish();
-        });
 
         // Fitur Tambah/Gabung Room
         fabAddRoom.setOnClickListener(v -> showAddRoomDialog());
