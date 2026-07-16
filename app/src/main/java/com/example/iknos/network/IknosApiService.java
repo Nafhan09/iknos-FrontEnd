@@ -7,6 +7,7 @@ import com.example.iknos.models.CreateRoomResponse;
 import com.example.iknos.models.JoinRoomRequest;
 import com.example.iknos.models.LoginRequest;
 import com.example.iknos.models.LoginResponse;
+import com.example.iknos.models.NoteResponse;
 import com.example.iknos.models.RegisterRequest;
 import com.example.iknos.models.RequestListResponse;
 import com.example.iknos.models.RoomListResponse;
@@ -14,13 +15,14 @@ import com.example.iknos.models.UserProfileResponse;
 import com.example.iknos.room.RoomDetailResponse;
 
 import okhttp3.MultipartBody;
+import okhttp3.RequestBody;
 import retrofit2.Call;
 import retrofit2.http.Body;
-import retrofit2.http.Header;
+import retrofit2.http.DELETE;
+import retrofit2.http.GET;
 import retrofit2.http.Multipart;
 import retrofit2.http.PATCH;
 import retrofit2.http.POST;
-import retrofit2.http.GET;
 import retrofit2.http.PUT;
 import retrofit2.http.Part;
 import retrofit2.http.Path;
@@ -59,4 +61,39 @@ public interface IknosApiService {
     Call<UserProfileResponse> uploadAvatar(
             @Part MultipartBody.Part avatar
     );
+
+    // ─── InstaNote ───────────────────────────────────────────────────────────
+
+    // Upload/update note dengan teks DAN gambar
+    @Multipart
+    @PUT("notes/{roomId}")
+    Call<BaseResponse> upsertNote(
+            @Path("roomId") String roomId,
+            @Part MultipartBody.Part image,
+            @Part("text") RequestBody text
+    );
+
+    // Upload/update note hanya teks
+    @Multipart
+    @PUT("notes/{roomId}")
+    Call<BaseResponse> upsertNoteTextOnly(
+            @Path("roomId") String roomId,
+            @Part("text") RequestBody text
+    );
+
+    // Upload/update note hanya gambar
+    @Multipart
+    @PUT("notes/{roomId}")
+    Call<BaseResponse> upsertNoteImageOnly(
+            @Path("roomId") String roomId,
+            @Part MultipartBody.Part image
+    );
+
+    // Ambil semua note anggota room
+    @GET("notes/{roomId}")
+    Call<NoteResponse> getRoomNotes(@Path("roomId") String roomId);
+
+    // Hapus note sendiri
+    @DELETE("notes/{roomId}")
+    Call<BaseResponse> deleteNote(@Path("roomId") String roomId);
 }

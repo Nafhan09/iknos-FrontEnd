@@ -22,6 +22,7 @@ import com.bumptech.glide.request.transition.Transition;
 import android.graphics.Canvas;
 import android.graphics.drawable.Drawable;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import android.widget.Button;
 import android.widget.ImageView;
@@ -33,6 +34,7 @@ import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.example.iknos.R;
+import com.example.iknos.models.NoteResponse;
 import com.example.iknos.network.IknosApiService;
 import com.example.iknos.network.RetrofitClient;
 import com.example.iknos.socket.SocketManager;
@@ -44,10 +46,12 @@ import android.util.Log;
 import android.Manifest;
 import android.content.pm.PackageManager;
 import android.location.Location;
+import android.net.Uri;
 import android.os.Looper;
 
 import androidx.annotation.NonNull;
 import androidx.core.app.ActivityCompat;
+import androidx.core.content.FileProvider;
 
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationCallback;
@@ -63,12 +67,24 @@ import retrofit2.Response;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.InputStream;
+import java.io.OutputStream;
+
+import de.hdodenhof.circleimageview.CircleImageView;
+import okhttp3.MediaType;
+import okhttp3.MultipartBody;
+import okhttp3.RequestBody;
+
 public class MainActivity extends AppCompatActivity {
 
     private MapView mapView;
     private MapLibreMap mapLibreMap;
     private final Map<String, Marker> userMarkers = new HashMap<>();
     private final Map<String, String> userAvatarUrlCache = new HashMap<>();
+    // Cache note setiap anggota room (userId -> NoteData)
+    private final Map<String, NoteResponse.NoteData> userNotesCache = new HashMap<>();
     private TextView tvActiveUsersCount;
     private MaterialSwitch switchHideLocation;
     private Button btnInstaNote;
@@ -84,9 +100,10 @@ public class MainActivity extends AppCompatActivity {
     private LocationCallback locationCallback;
     private boolean isHidden = false;
 
-    // Popup
+    // Dialog Upload Note
     private ImageView ivSelfiePreview;
     private Bitmap capturedSelfieBitmap = null;
+    private Uri currentPhotoUri = null;
 
 
 
@@ -95,10 +112,28 @@ public class MainActivity extends AppCompatActivity {
     private final ActivityResultLauncher<Intent> cameraLauncher = registerForActivityResult(
             new ActivityResultContracts.StartActivityForResult(),
             result -> {
-                if (result.getResultCode() == RESULT_OK && result.getData() != null) {
-                    Bundle extras = result.getData().getExtras();
-                    if (extras != null) {
-                        capturedSelfieBitmap = (Bitmap) extras.get("data");
+                if (result.getResultCode() == RESULT_OK) {
+                    // Jika sukses, baca gambar resolusi tinggi dari currentPhotoUri
+                    if (currentPhotoUri != null) {
+                        try {
+                            capturedSelfieBitmap = getUprightBitmap(currentPhotoUri);
+                            if (ivSelfiePreview != null && capturedSelfieBitmap != null) {
+                                ivSelfiePreview.setImageBitmap(capturedSelfieBitmap);
+                                ivSelfiePreview.setVisibility(View.VISIBLE);
+                                // Munculkan tombol hapus jika referensinya bisa didapatkan dari Parent
+                                View parent = (View) ivSelfiePreview.getParent();
+                                if (parent != null) {
+                                    TextView tvRemove = parent.findViewById(R.id.tvRemovePhoto);
+                                    if (tvRemove != null) tvRemove.setVisibility(View.VISIBLE);
+                                }
+                            }
+                        } catch (Exception e) {
+                            Log.e(TAG, "Gagal memuat foto resolusi tinggi: " + e.getMessage());
+                            Toast.makeText(this, "Gagal memuat foto", Toast.LENGTH_SHORT).show();
+                        }
+                    } else if (result.getData() != null && result.getData().getExtras() != null) {
+                        // Fallback ke thumbnail jika currentPhotoUri null
+                        capturedSelfieBitmap = (Bitmap) result.getData().getExtras().get("data");
                         if (ivSelfiePreview != null && capturedSelfieBitmap != null) {
                             ivSelfiePreview.setImageBitmap(capturedSelfieBitmap);
                             ivSelfiePreview.setVisibility(View.VISIBLE);
@@ -107,6 +142,39 @@ public class MainActivity extends AppCompatActivity {
                 }
             }
     );
+
+    /** Membaca EXIF dari foto yang diambil untuk merotasinya ke arah yang benar (upright) */
+    private Bitmap getUprightBitmap(Uri imageUri) {
+        try {
+            Bitmap bitmap = MediaStore.Images.Media.getBitmap(getContentResolver(), imageUri);
+            InputStream input = getContentResolver().openInputStream(imageUri);
+            if (input == null) return bitmap;
+
+            android.media.ExifInterface ei = new android.media.ExifInterface(input);
+            int orientation = ei.getAttributeInt(android.media.ExifInterface.TAG_ORIENTATION,
+                    android.media.ExifInterface.ORIENTATION_UNDEFINED);
+            input.close();
+
+            android.graphics.Matrix matrix = new android.graphics.Matrix();
+            switch (orientation) {
+                case android.media.ExifInterface.ORIENTATION_ROTATE_90:
+                    matrix.postRotate(90);
+                    break;
+                case android.media.ExifInterface.ORIENTATION_ROTATE_180:
+                    matrix.postRotate(180);
+                    break;
+                case android.media.ExifInterface.ORIENTATION_ROTATE_270:
+                    matrix.postRotate(270);
+                    break;
+                default:
+                    return bitmap;
+            }
+            return Bitmap.createBitmap(bitmap, 0, 0, bitmap.getWidth(), bitmap.getHeight(), matrix, true);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -128,14 +196,83 @@ public class MainActivity extends AppCompatActivity {
         mapView.getMapAsync(map -> {
             mapLibreMap = map;
             mapLibreMap.setStyle("https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json", style -> {
-                // Style peta sudah siap dipakai (misal untuk nambah marker nanti)
                 Log.d(TAG, "Map style berhasil dimuat");
-
-                // Set posisi awal kamera (contoh: Bandung, sesuaikan default sesuai kebutuhan)
                 mapLibreMap.setCameraPosition(new CameraPosition.Builder()
                         .target(new LatLng(-6.9147, 107.6098))
                         .zoom(14)
                         .build());
+            });
+
+            // Custom InfoWindowAdapter agar Note muncul di atas marker
+            mapLibreMap.setInfoWindowAdapter(new MapLibreMap.InfoWindowAdapter() {
+                @androidx.annotation.Nullable
+                @Override
+                public View getInfoWindow(@NonNull Marker marker) {
+                    String userId = marker.getTitle();
+                    if (userId == null) return null;
+
+                    View infoView = LayoutInflater.from(MainActivity.this).inflate(R.layout.dialog_view_note, null);
+                    CircleImageView ivNoteAvatar = infoView.findViewById(R.id.ivNoteAvatar);
+                    TextView tvNoteUsername = infoView.findViewById(R.id.tvNoteUsername);
+                    TextView tvNoteTimestamp = infoView.findViewById(R.id.tvNoteTimestamp);
+                    ImageView ivNoteImage = infoView.findViewById(R.id.ivNoteImage);
+                    TextView tvNoteText = infoView.findViewById(R.id.tvNoteText);
+                    View layoutNoNote = infoView.findViewById(R.id.layoutNoNote);
+
+                    NoteResponse.NoteData note = userNotesCache.get(userId);
+                    String avatarUrl = userAvatarUrlCache.get(userId);
+
+                    if (avatarUrl != null && !avatarUrl.isEmpty()) {
+                        Glide.with(MainActivity.this).load(avatarUrl).placeholder(R.mipmap.ic_launcher_round).into(ivNoteAvatar);
+                    }
+
+                    if (note != null) {
+                        String username = (note.getUser() != null && note.getUser().getUsername() != null)
+                                ? note.getUser().getUsername() : userId;
+                        tvNoteUsername.setText(username);
+
+                        if (note.getUpdatedAt() != null && !note.getUpdatedAt().isEmpty()) {
+                            String dateStr = note.getUpdatedAt().length() >= 10
+                                    ? note.getUpdatedAt().substring(0, 10) : note.getUpdatedAt();
+                            tvNoteTimestamp.setText(dateStr);
+                        }
+
+                        boolean hasImage = note.getImageUrl() != null && !note.getImageUrl().isEmpty();
+                        boolean hasText = note.getText() != null && !note.getText().isEmpty();
+
+                        if (hasImage) {
+                            ivNoteImage.setVisibility(View.VISIBLE);
+                            Glide.with(MainActivity.this)
+                                    .load(note.getImageUrl())
+                                    .into(ivNoteImage);
+                        } else {
+                            ivNoteImage.setVisibility(View.GONE);
+                        }
+                        if (hasText) {
+                            tvNoteText.setVisibility(View.VISIBLE);
+                            tvNoteText.setText(note.getText());
+                        } else {
+                            tvNoteText.setVisibility(View.GONE);
+                        }
+                        if (!hasImage && !hasText) {
+                            layoutNoNote.setVisibility(View.VISIBLE);
+                        } else {
+                            layoutNoNote.setVisibility(View.GONE);
+                        }
+                    } else {
+                        tvNoteUsername.setText(userId);
+                        layoutNoNote.setVisibility(View.VISIBLE);
+                        ivNoteImage.setVisibility(View.GONE);
+                        tvNoteText.setVisibility(View.GONE);
+                    }
+
+                    return infoView;
+                }
+            });
+
+            // Klik marker -> tampilkan InfoWindow bawaan
+            mapLibreMap.setOnMarkerClickListener(marker -> {
+                return false; // false = biarkan MapLibre menampilkan InfoWindow
             });
         });
 
@@ -146,13 +283,13 @@ public class MainActivity extends AppCompatActivity {
             SocketManager.getInstance().connectSocket(token);
 
             fetchRoomMembersAvatar();
+            fetchRoomNotes(); // ambil note semua anggota di awal
             setupSocketListener();
             SocketManager.getInstance().joinRoom(currentRoomId, snapshot -> {
                 for (int i = 0; i < snapshot.length(); i++) {
                     try {
                         JSONObject member = snapshot.getJSONObject(i);
                         String userId = member.getString("userId");
-                        // Asumsikan snapshot mengembalikan lat dan lng (bisa null jika belum ada update)
                         if (member.has("lat") && !member.isNull("lat")) {
                             double lat = member.getDouble("lat");
                             double lng = member.getDouble("lng");
@@ -299,7 +436,6 @@ public class MainActivity extends AppCompatActivity {
             return;
         }
 
-        // TODO: ganti dengan avatarUrl asli dari data member Room (lihat catatan di bawah)
         String avatarUrl = getAvatarUrlForUser(userId);
 
         View markerView = LayoutInflater.from(this).inflate(R.layout.marker_user, null);
@@ -370,42 +506,148 @@ public class MainActivity extends AppCompatActivity {
         return bitmap;
     }
 
-    // Fungsi untuk memunculkan Popup Insta Note
+    // Fungsi untuk memunculkan Popup Upload Insta Note milik sendiri
     private void showInstaNoteDialog() {
         View dialogView = LayoutInflater.from(this).inflate(R.layout.dialog_insta_note, null);
         TextInputEditText etNoteText = dialogView.findViewById(R.id.etNoteText);
         Button btnCaptureSelfie = dialogView.findViewById(R.id.btnCaptureSelfie);
         ivSelfiePreview = dialogView.findViewById(R.id.ivSelfiePreview);
+        TextView tvRemovePhoto = dialogView.findViewById(R.id.tvRemovePhoto);
 
         // Jika sebelumnya sudah pernah foto, tampilkan kembali preview-nya di popup
         if (capturedSelfieBitmap != null) {
             ivSelfiePreview.setImageBitmap(capturedSelfieBitmap);
             ivSelfiePreview.setVisibility(View.VISIBLE);
+            tvRemovePhoto.setVisibility(View.VISIBLE);
         }
 
-        // Aksi tombol kamera di dalam popup
-        btnCaptureSelfie.setOnClickListener(v -> {
-            Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
-            cameraLauncher.launch(intent);
+        // Tombol hapus foto
+        tvRemovePhoto.setOnClickListener(v -> {
+            capturedSelfieBitmap = null;
+            ivSelfiePreview.setVisibility(View.GONE);
+            tvRemovePhoto.setVisibility(View.GONE);
         });
 
-        // Buat Frame Popup dengan Material Design Dark
+        // Tombol kamera
+        btnCaptureSelfie.setOnClickListener(v -> {
+            Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+            if (intent.resolveActivity(getPackageManager()) != null) {
+                try {
+                    File photoFile = File.createTempFile("photo_", ".jpg", getCacheDir());
+                    currentPhotoUri = FileProvider.getUriForFile(
+                            this,
+                            getApplicationContext().getPackageName() + ".fileprovider",
+                            photoFile
+                    );
+                    intent.putExtra(MediaStore.EXTRA_OUTPUT, currentPhotoUri);
+                    cameraLauncher.launch(intent);
+                } catch (Exception e) {
+                    Toast.makeText(this, "Gagal membuat file untuk foto", Toast.LENGTH_SHORT).show();
+                }
+            } else {
+                Toast.makeText(this, "Tidak ada aplikasi kamera", Toast.LENGTH_SHORT).show();
+            }
+        });
+
         new MaterialAlertDialogBuilder(this, com.google.android.material.R.style.ThemeOverlay_Material3_MaterialAlertDialog)
                 .setView(dialogView)
                 .setPositiveButton("Update", (dialog, which) -> {
                     String statusText = etNoteText.getText() != null ? etNoteText.getText().toString().trim() : "";
 
-                    // Logika validasi MVP Poin 8 & 9
                     if (statusText.isEmpty() && capturedSelfieBitmap == null) {
-                        Toast.makeText(this, "Gagal: Note tidak boleh kosong!", Toast.LENGTH_SHORT).show();
-                    } else {
-                        // Note otomatis ter-update (menimpa note lama)
-                        Toast.makeText(this, "Insta Note Berhasil Diperbarui!", Toast.LENGTH_SHORT).show();
-                        // TODO: Bagian teman backend untuk mem-push data teks/foto status ini ke server
+                        Toast.makeText(this, "Note tidak boleh kosong!", Toast.LENGTH_SHORT).show();
+                        return;
                     }
+                    uploadNote(statusText, capturedSelfieBitmap);
                 })
                 .setNegativeButton("Batal", (dialog, which) -> dialog.dismiss())
                 .show();
+    }
+
+    /** Upload note (teks dan/atau gambar) ke backend, lalu refresh cache */
+    private void uploadNote(String text, Bitmap imageBitmap) {
+        if (currentRoomId == null) return;
+        IknosApiService api = RetrofitClient.getClient(this).create(IknosApiService.class);
+
+        boolean hasText = !text.isEmpty();
+        boolean hasImage = imageBitmap != null;
+
+        Callback<com.example.iknos.models.BaseResponse> callback = new Callback<com.example.iknos.models.BaseResponse>() {
+            @Override
+            public void onResponse(Call<com.example.iknos.models.BaseResponse> call, Response<com.example.iknos.models.BaseResponse> response) {
+                if (response.isSuccessful()) {
+                    Toast.makeText(MainActivity.this, "Insta Note berhasil diperbarui!", Toast.LENGTH_SHORT).show();
+                    fetchRoomNotes(); // refresh cache note
+                } else {
+                    Toast.makeText(MainActivity.this, "Gagal update note: " + response.code(), Toast.LENGTH_SHORT).show();
+                }
+            }
+            @Override
+            public void onFailure(Call<com.example.iknos.models.BaseResponse> call, Throwable t) {
+                Toast.makeText(MainActivity.this, "Error: " + t.getMessage(), Toast.LENGTH_SHORT).show();
+            }
+        };
+
+        if (hasImage && hasText) {
+            // Ubah Bitmap menjadi File sementara
+            File imageFile = bitmapToTempFile(imageBitmap);
+            if (imageFile == null) {
+                Toast.makeText(this, "Gagal memproses gambar", Toast.LENGTH_SHORT).show();
+                return;
+            }
+            RequestBody reqFile = RequestBody.create(MediaType.parse("image/jpeg"), imageFile);
+            MultipartBody.Part imgPart = MultipartBody.Part.createFormData("image", imageFile.getName(), reqFile);
+            RequestBody textPart = RequestBody.create(MediaType.parse("text/plain"), text);
+            api.upsertNote(currentRoomId, imgPart, textPart).enqueue(callback);
+
+        } else if (hasImage) {
+            File imageFile = bitmapToTempFile(imageBitmap);
+            if (imageFile == null) { Toast.makeText(this, "Gagal memproses gambar", Toast.LENGTH_SHORT).show(); return; }
+            RequestBody reqFile = RequestBody.create(MediaType.parse("image/jpeg"), imageFile);
+            MultipartBody.Part imgPart = MultipartBody.Part.createFormData("image", imageFile.getName(), reqFile);
+            api.upsertNoteImageOnly(currentRoomId, imgPart).enqueue(callback);
+
+        } else {
+            RequestBody textPart = RequestBody.create(MediaType.parse("text/plain"), text);
+            api.upsertNoteTextOnly(currentRoomId, textPart).enqueue(callback);
+        }
+    }
+
+    /** Ambil semua note anggota room dan simpan di cache (userNotesCache) */
+    private void fetchRoomNotes() {
+        if (currentRoomId == null) return;
+        IknosApiService api = RetrofitClient.getClient(this).create(IknosApiService.class);
+        api.getRoomNotes(currentRoomId).enqueue(new Callback<NoteResponse>() {
+            @Override
+            public void onResponse(Call<NoteResponse> call, Response<NoteResponse> response) {
+                if (response.isSuccessful() && response.body() != null && response.body().getData() != null) {
+                    userNotesCache.clear();
+                    for (NoteResponse.NoteData note : response.body().getData()) {
+                        userNotesCache.put(note.getUserId(), note);
+                    }
+                    Log.d(TAG, "Note cache diperbarui: " + userNotesCache.size() + " note");
+                }
+            }
+            @Override
+            public void onFailure(Call<NoteResponse> call, Throwable t) {
+                Log.e(TAG, "Gagal fetch notes: " + t.getMessage());
+            }
+        });
+    }
+
+    /** Konversi Bitmap menjadi File sementara di cache directory */
+    private File bitmapToTempFile(Bitmap bitmap) {
+        try {
+            File tempFile = File.createTempFile("note_selfie_", ".jpg", getCacheDir());
+            FileOutputStream fos = new FileOutputStream(tempFile);
+            bitmap.compress(Bitmap.CompressFormat.JPEG, 85, fos);
+            fos.flush();
+            fos.close();
+            return tempFile;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        }
     }
     private void checkLocationPermissions() {
         if (ActivityCompat.checkSelfPermission(this,
