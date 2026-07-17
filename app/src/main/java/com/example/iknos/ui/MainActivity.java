@@ -83,6 +83,7 @@ public class MainActivity extends AppCompatActivity {
     private MapLibreMap mapLibreMap;
     private final Map<String, Marker> userMarkers = new HashMap<>();
     private final Map<String, String> userAvatarUrlCache = new HashMap<>();
+    private final Map<String, String> userUsernameCache = new HashMap<>();
     // Cache note setiap anggota room (userId -> NoteData)
     private final Map<String, NoteResponse.NoteData> userNotesCache = new HashMap<>();
     private TextView tvActiveUsersCount;
@@ -231,6 +232,8 @@ public class MainActivity extends AppCompatActivity {
                         Glide.with(MainActivity.this).load(avatarUrl).placeholder(R.mipmap.ic_launcher_round).into(ivNoteAvatar);
                     }
 
+                    Button btnDeleteNote = infoView.findViewById(R.id.btnDeleteNote);
+
                     if (note != null) {
                         String username = (note.getUser() != null && note.getUser().getUsername() != null)
                                 ? note.getUser().getUsername() : userId;
@@ -264,11 +267,25 @@ public class MainActivity extends AppCompatActivity {
                         } else {
                             layoutNoNote.setVisibility(View.GONE);
                         }
+                        
+                        // Tampilkan tombol Hapus Note hanya jika ini adalah note milik pengguna sendiri
+                        if (userId.equals(getMyUserId())) {
+                            btnDeleteNote.setVisibility(View.VISIBLE);
+                            btnDeleteNote.setOnClickListener(v -> {
+                                deleteNote();
+                                marker.hideInfoWindow();
+                            });
+                        } else {
+                            btnDeleteNote.setVisibility(View.GONE);
+                        }
+                        
                     } else {
-                        tvNoteUsername.setText(userId);
+                        String fallbackUsername = userUsernameCache.containsKey(userId) ? userUsernameCache.get(userId) : userId;
+                        tvNoteUsername.setText(fallbackUsername);
                         layoutNoNote.setVisibility(View.VISIBLE);
                         ivNoteImage.setVisibility(View.GONE);
                         tvNoteText.setVisibility(View.GONE);
+                        btnDeleteNote.setVisibility(View.GONE);
                     }
 
                     return infoView;
@@ -462,6 +479,7 @@ public class MainActivity extends AppCompatActivity {
                             for (RoomDetailResponse.RoomMember member : response.body().data.members) {
                                 if (member.user != null) {
                                     userAvatarUrlCache.put(member.userId, member.user.avatarUrl);
+                                    userUsernameCache.put(member.userId, member.user.username);
                                 }
                             }
                             Log.d(TAG, "Berhasil fetch avatar " + userAvatarUrlCache.size() + " member Room");
@@ -607,19 +625,49 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        new MaterialAlertDialogBuilder(this, com.google.android.material.R.style.ThemeOverlay_Material3_MaterialAlertDialog)
+        androidx.appcompat.app.AlertDialog dialog = new MaterialAlertDialogBuilder(this, com.google.android.material.R.style.ThemeOverlay_Material3_MaterialAlertDialog)
                 .setView(dialogView)
-                .setPositiveButton("Update", (dialog, which) -> {
-                    String statusText = etNoteText.getText() != null ? etNoteText.getText().toString().trim() : "";
+                .setPositiveButton("Update", null) // handle secara manual agar bisa validasi
+                .setNegativeButton("Batal", (d, which) -> d.dismiss())
+                .create();
 
-                    if (statusText.isEmpty() && capturedSelfieBitmap == null) {
-                        Toast.makeText(this, "Note tidak boleh kosong!", Toast.LENGTH_SHORT).show();
-                        return;
-                    }
-                    uploadNote(statusText, capturedSelfieBitmap);
-                })
-                .setNegativeButton("Batal", (dialog, which) -> dialog.dismiss())
-                .show();
+        dialog.show();
+        
+        // Override aksi tombol positif setelah dialog ditampilkan untuk validasi tanpa menutup dialog otomatis
+        dialog.getButton(androidx.appcompat.app.AlertDialog.BUTTON_POSITIVE).setOnClickListener(v -> {
+            String statusText = etNoteText.getText() != null ? etNoteText.getText().toString().trim() : "";
+            if (statusText.isEmpty() && capturedSelfieBitmap == null) {
+                Toast.makeText(this, "Note tidak boleh kosong! Hapus note dengan tombol Hapus di bawah", Toast.LENGTH_SHORT).show();
+                return;
+            }
+            uploadNote(statusText, capturedSelfieBitmap);
+            dialog.dismiss();
+        });
+    }
+
+    /** Menghapus note sendiri */
+    private void deleteNote() {
+        if (currentRoomId == null) return;
+        IknosApiService api = RetrofitClient.getClient(this).create(IknosApiService.class);
+        api.deleteNote(currentRoomId).enqueue(new Callback<com.example.iknos.models.BaseResponse>() {
+            @Override
+            public void onResponse(Call<com.example.iknos.models.BaseResponse> call, Response<com.example.iknos.models.BaseResponse> response) {
+                if (response.isSuccessful()) {
+                    Toast.makeText(MainActivity.this, "Note berhasil dihapus", Toast.LENGTH_SHORT).show();
+                    // Karena note hilang dari DB, hapus dari cache local dan tutup info window di map
+                    String myUserId = getMyUserId();
+                    if (myUserId != null) userNotesCache.remove(myUserId);
+                    fetchRoomNotes(); 
+                } else {
+                    Toast.makeText(MainActivity.this, "Gagal hapus note", Toast.LENGTH_SHORT).show();
+                }
+            }
+
+            @Override
+            public void onFailure(Call<com.example.iknos.models.BaseResponse> call, Throwable t) {
+                Toast.makeText(MainActivity.this, "Error: " + t.getMessage(), Toast.LENGTH_SHORT).show();
+            }
+        });
     }
 
     /** Upload note (teks dan/atau gambar) ke backend, lalu refresh cache */

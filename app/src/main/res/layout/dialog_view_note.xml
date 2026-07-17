@@ -104,4 +104,17 @@
             android:textSize="12sp" />
     </LinearLayout>
 
+    <!-- Tombol Hapus Keseluruhan Note (hanya untuk note milik sendiri) -->
+    <Button
+        android:id="@+id/btnDeleteNote"
+        android:layout_width="match_parent"
+        android:layout_height="36dp"
+        android:layout_marginTop="12dp"
+        android:backgroundTint="#FF1744"
+        android:fontFamily="@font/poppins_bold"
+        android:text="Hapus Note"
+        android:textColor="#FFFFFF"
+        android:textSize="12sp"
+        android:visibility="gone" />
+
 </LinearLayout>
