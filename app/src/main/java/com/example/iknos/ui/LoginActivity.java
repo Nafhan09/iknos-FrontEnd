@@ -33,7 +33,7 @@ public class LoginActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_login);
 
-        // Cek apakah user sudah pernah login sebelumnya
+        // Penerapan Autentikasi Otomatis dengan memanfaatkan JWT dan SharedPreferences
         SharedPreferences pref = getSharedPreferences("IknosPref", MODE_PRIVATE);
         String savedToken = pref.getString("JWT_TOKEN", null);
         if (savedToken != null && !savedToken.isEmpty()) {
@@ -50,69 +50,63 @@ public class LoginActivity extends AppCompatActivity {
         btnLogin = findViewById(R.id.btnLogin);
         tvToRegister = findViewById(R.id.tvToRegister);
 
-        // Aksi ketika tombol login ditekan
+        // Aksi tombol login
         btnLogin.setOnClickListener(v -> {
 
             String emailInput = etEmail.getText().toString().trim();
             String passwordInput = etPassword.getText().toString().trim();
 
             if (emailInput.isEmpty() || passwordInput.isEmpty()) {
+                // TODO: HAPUS/GANTI TOAST
                 Toast.makeText(LoginActivity.this, "Semua kolom harus diisi!", Toast.LENGTH_SHORT).show();
                 return;
             }
 
             // Jalankan Retrofit
-            IknosApiService apiService =
-                    RetrofitClient.getClient(LoginActivity.this)
-                            .create(IknosApiService.class);
+            IknosApiService apiService = RetrofitClient.getClient(LoginActivity.this).create(IknosApiService.class);
             LoginRequest request = new LoginRequest(emailInput, passwordInput);
 
             apiService.login(request).enqueue(new Callback<LoginResponse>() {
                 @Override
                 public void onResponse(Call<LoginResponse> call, Response<LoginResponse> response) {
 
-                    if (response.isSuccessful()
-                            && response.body() != null
-                            && response.body().isSuccess()) {
+                    if (response.isSuccessful() && response.body() != null && response.body().isSuccess()) {
 
-                        // Ambil token dan id user dari backend
+                        // Ambil token JWT dan id user dari backend
                         String jwtToken = response.body().getData().getToken();
                         String userId = response.body().getData().getUser().getId();
 
-                        // TAMBAHKAN BARIS INI: Hubungkan ke Socket.IO server
+                        // Hubungkan ke Socket.IO server
+                        // Parameter jwtToken berfungsi untuk validasi user
                         SocketManager.getInstance().connectSocket(jwtToken);
 
-                        // Simpan token dan userId
+                        // Simpan jwtToken dan userId ke penyimpanan lokal aplikasi dengan menggunakan SharedPreferences
                         SharedPreferences pref = getSharedPreferences("IknosPref", MODE_PRIVATE);
-                        pref.edit()
-                                .putString("JWT_TOKEN", jwtToken)
-                                .putString("USER_ID", userId)
-                                .apply();
+                        pref.edit().putString("JWT_TOKEN", jwtToken).putString("USER_ID", userId).apply();
 
+                        // TODO: HAPUS/GANTI TOAST
                         Toast.makeText(LoginActivity.this, "Login Berhasil!", Toast.LENGTH_SHORT).show();
 
-                        // Pindah ke RoomActivity
+                        // Intent untuk Pindah ke RoomActivity
                         Intent intent = new Intent(LoginActivity.this, RoomActivity.class);
                         startActivity(intent);
                         finish();
 
                     } else {
-                        Toast.makeText(LoginActivity.this,
-                                "Login Gagal! Cek email/password.",
-                                Toast.LENGTH_SHORT).show();
+                        // TODO: HAPUS/GANTI TOAST
+                        Toast.makeText(LoginActivity.this, "Login Gagal! Cek email/password.", Toast.LENGTH_SHORT).show();
                     }
                 }
 
                 @Override
                 public void onFailure(Call<LoginResponse> call, Throwable t) {
-                    Toast.makeText(LoginActivity.this,
-                            "Error Koneksi: " + t.getMessage(),
-                            Toast.LENGTH_SHORT).show();
+                    // TODO: HAPUS/GANTI TOAST
+                    Toast.makeText(LoginActivity.this, "Error Koneksi: " + t.getMessage(), Toast.LENGTH_SHORT).show();
                 }
             });
         });
 
-        // Pindah ke halaman Register
+        // Intent untuk Pindah ke halaman Register
         tvToRegister.setOnClickListener(v -> {
             Intent intent = new Intent(LoginActivity.this, RegisterActivity.class);
             startActivity(intent);

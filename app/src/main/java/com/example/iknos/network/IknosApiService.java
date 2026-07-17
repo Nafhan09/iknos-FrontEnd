@@ -27,73 +27,56 @@ import retrofit2.http.PUT;
 import retrofit2.http.Part;
 import retrofit2.http.Path;
 
+// INTERFACE/BLUEPRINT SELURUH ENDPOINT YANG DIGUNAKAN
 public interface IknosApiService {
 
+    // Endpoint untuk Login dengan method POST
     @POST("auth/login")
     Call<LoginResponse> login(@Body LoginRequest request);
+    // Endpoint untuk Register dengan method POST
     @POST("auth/register")
     Call<LoginResponse> register(@Body RegisterRequest request);
+    // Endpoint untuk membuat Room dengan method POST
     @POST("rooms")
     Call<CreateRoomResponse> createRoom(@Body CreateRoomRequest request);
+    // Endpoint untuk Request List Room dengan method GET
     @GET("rooms")
     Call<RoomListResponse> getMyRooms();
+    // Endpoint untuk Mengirim Permintaan Join Room dengan method POST
     @POST("rooms/join")
     Call<CreateRoomResponse> joinRoom(@Body JoinRoomRequest request);
-    // Ambil list orang yang minta join berdasarkan ID Room
+    // Endpoint untuk Request List Pengiriman Permintaan Join Room dengan method POST
     @GET("rooms/{roomId}/requests")
     Call<RequestListResponse> getPendingRequests(@Path("roomId") String roomId);
-
-    // Approve atau Reject request berdasarkan ID Request
+    // Endpoint untuk Update status Permintaan Join Room dengan method PATCH
     @PATCH("rooms/requests/{requestId}")
     Call<BaseResponse> handleJoinRequest(@Path("requestId") String requestId, @Body ApprovalBody body);
-
-    // Ambil data roomId
+    // Endpoint untuk Request List Room berdasarkan roomId dengan method GET
     @GET("rooms/{roomId}")
     Call<RoomDetailResponse> getRoomDetail(@Path("roomId") String roomId);
-
-    // Mengambil data profil pengguna
+    // Endpoint untuk Request Data Pengguna (Diri Sendiri) dengan method GET
     @GET("users/me")
     Call<UserProfileResponse> getUserProfile();
-
-    // Mengunggah/update foto profil
+    // Endpoint untuk Update Profil Pengguna dengan method PUT
     @Multipart
     @PUT("users/me/avatar")
-    Call<UserProfileResponse> uploadAvatar(
-            @Part MultipartBody.Part avatar
-    );
-
-    // ─── InstaNote ───────────────────────────────────────────────────────────
-
-    // Upload/update note dengan teks DAN gambar
+    Call<UserProfileResponse> uploadAvatar(@Part MultipartBody.Part avatar);
+    // Endpoint untuk Update Note (Gambar dan Teks) dengan method PUT
     @Multipart
     @PUT("notes/{roomId}")
-    Call<BaseResponse> upsertNote(
-            @Path("roomId") String roomId,
-            @Part MultipartBody.Part image,
-            @Part("text") RequestBody text
-    );
-
-    // Upload/update note hanya teks
+    Call<BaseResponse> upsertNote(@Path("roomId") String roomId, @Part MultipartBody.Part image, @Part("text") RequestBody text);
+    // Endpoint untuk Update Note (Teks) dengan method PUT
     @Multipart
     @PUT("notes/{roomId}")
-    Call<BaseResponse> upsertNoteTextOnly(
-            @Path("roomId") String roomId,
-            @Part("text") RequestBody text
-    );
-
-    // Upload/update note hanya gambar
+    Call<BaseResponse> upsertNoteTextOnly(@Path("roomId") String roomId, @Part("text") RequestBody text);
+    // Endpoint untuk Update Note (Gambar) dengan method PUT
     @Multipart
     @PUT("notes/{roomId}")
-    Call<BaseResponse> upsertNoteImageOnly(
-            @Path("roomId") String roomId,
-            @Part MultipartBody.Part image
-    );
-
-    // Ambil semua note anggota room
+    Call<BaseResponse> upsertNoteImageOnly(@Path("roomId") String roomId, @Part MultipartBody.Part image);
+    // Endpoint untuk Request list semua note berdasarkan roomId dengan method GET
     @GET("notes/{roomId}")
     Call<NoteResponse> getRoomNotes(@Path("roomId") String roomId);
-
-    // Hapus note sendiri
+    // Endpoint untuk Hapus Note berdasarkan roomId dengan method DELETE
     @DELETE("notes/{roomId}")
     Call<BaseResponse> deleteNote(@Path("roomId") String roomId);
 }

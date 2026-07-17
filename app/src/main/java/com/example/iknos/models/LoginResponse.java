@@ -9,7 +9,7 @@ public class LoginResponse {
     public Data getData() { return data; }
 
     public static class Data {
-        private String token; // Ini JWT Token yang kita butuhkan!
+        private String token;
         private User user;
         
         public String getToken() { return token; }

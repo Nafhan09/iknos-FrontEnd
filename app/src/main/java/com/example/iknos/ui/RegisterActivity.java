@@ -33,7 +33,7 @@ public class RegisterActivity extends AppCompatActivity {
         btnRegister = findViewById(R.id.btnRegister);
         tvToLogin = findViewById(R.id.tvToLogin);
 
-        // Aksi ketika tombol daftar ditekan
+        // Aksi tombol daftar
         btnRegister.setOnClickListener(v -> {
 
             String usernameInput = etRegUsername.getText().toString().trim();
@@ -41,54 +41,41 @@ public class RegisterActivity extends AppCompatActivity {
             String passwordInput = etRegPassword.getText().toString().trim();
 
             if (usernameInput.isEmpty() || emailInput.isEmpty() || passwordInput.isEmpty()) {
-                Toast.makeText(RegisterActivity.this,
-                        "Semua kolom harus diisi!",
-                        Toast.LENGTH_SHORT).show();
+                // TODO: HAPUS/GANTI TOAST
+                Toast.makeText(RegisterActivity.this, "Semua kolom harus diisi!", Toast.LENGTH_SHORT).show();
                 return;
             }
 
-            IknosApiService apiService =
-                    RetrofitClient.getClient(RegisterActivity.this)
-                            .create(IknosApiService.class);
+            // Jalankan Retrofit
+            IknosApiService apiService = RetrofitClient.getClient(RegisterActivity.this).create(IknosApiService.class);
 
-            RegisterRequest request =
-                    new RegisterRequest(usernameInput, emailInput, passwordInput);
+            RegisterRequest request = new RegisterRequest(usernameInput, emailInput, passwordInput);
 
             apiService.register(request).enqueue(new Callback<LoginResponse>() {
 
                 @Override
-                public void onResponse(Call<LoginResponse> call,
-                                       Response<LoginResponse> response) {
+                public void onResponse(Call<LoginResponse> call, Response<LoginResponse> response) {
 
-                    if (response.isSuccessful()
-                            && response.body() != null
-                            && response.body().isSuccess()) {
-
-                        Toast.makeText(RegisterActivity.this,
-                                "Registrasi Berhasil! Silakan Login.",
-                                Toast.LENGTH_SHORT).show();
-
+                    if (response.isSuccessful() && response.body() != null && response.body().isSuccess()) {
+                        // TODO: HAPUS/GANTI TOAST
+                        Toast.makeText(RegisterActivity.this, "Registrasi Berhasil! Silakan Login.", Toast.LENGTH_SHORT).show();
                         finish();
 
                     } else {
-
-                        Toast.makeText(RegisterActivity.this,
-                                "Registrasi Gagal! Email/Username mungkin sudah terpakai.",
-                                Toast.LENGTH_SHORT).show();
+                        // TODO: HAPUS/GANTI TOAST
+                        Toast.makeText(RegisterActivity.this, "Registrasi Gagal! Email/Username mungkin sudah terpakai.", Toast.LENGTH_SHORT).show();
                     }
                 }
 
                 @Override
                 public void onFailure(Call<LoginResponse> call, Throwable t) {
-
-                    Toast.makeText(RegisterActivity.this,
-                            "Error Koneksi: " + t.getMessage(),
-                            Toast.LENGTH_SHORT).show();
+                    // TODO: HAPUS/GANTI TOAST
+                    Toast.makeText(RegisterActivity.this, "Error Koneksi: " + t.getMessage(), Toast.LENGTH_SHORT).show();
                 }
             });
         });
 
-        // Kembali ke halaman Login jika sudah punya akun
+        // Kembali ke halaman Login
         tvToLogin.setOnClickListener(v -> finish());
     }
 }
