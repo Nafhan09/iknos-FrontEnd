@@ -33,6 +33,18 @@ public class LoginActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_login);
 
+        // Cek apakah user sudah pernah login sebelumnya
+        SharedPreferences pref = getSharedPreferences("IknosPref", MODE_PRIVATE);
+        String savedToken = pref.getString("JWT_TOKEN", null);
+        if (savedToken != null && !savedToken.isEmpty()) {
+            // Langsung arahkan ke halaman utama/RoomActivity
+            SocketManager.getInstance().connectSocket(savedToken);
+            Intent intent = new Intent(LoginActivity.this, RoomActivity.class);
+            startActivity(intent);
+            finish();
+            return;
+        }
+
         etEmail = findViewById(R.id.etEmail);
         etPassword = findViewById(R.id.etPassword);
         btnLogin = findViewById(R.id.btnLogin);
