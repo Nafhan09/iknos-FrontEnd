@@ -105,6 +105,11 @@ public class MainActivity extends AppCompatActivity {
     private Bitmap capturedSelfieBitmap = null;
     private Uri currentPhotoUri = null;
 
+    // Polling note berkala (5 detik)
+    private static final long NOTE_POLL_INTERVAL_MS = 5_000L;
+    private final android.os.Handler notePollingHandler = new android.os.Handler(android.os.Looper.getMainLooper());
+    private Runnable notePollingRunnable;
+
 
 
 
@@ -284,6 +289,7 @@ public class MainActivity extends AppCompatActivity {
 
             fetchRoomMembersAvatar();
             fetchRoomNotes(); // ambil note semua anggota di awal
+            startNotePolling(); // mulai polling berkala setiap 5 detik
             setupSocketListener();
             SocketManager.getInstance().joinRoom(currentRoomId, snapshot -> {
                 for (int i = 0; i < snapshot.length(); i++) {
@@ -802,6 +808,9 @@ public class MainActivity extends AppCompatActivity {
             fusedLocationClient.removeLocationUpdates(locationCallback);
         }
 
+        // Hentikan polling note
+        stopNotePolling();
+
         io.socket.client.Socket socket = SocketManager.getInstance().getSocket();
         if (socket != null) {
             // 2. Matikan pendengar event agar tidak terjadi memory leak
@@ -831,12 +840,16 @@ public class MainActivity extends AppCompatActivity {
     protected void onResume() {
         super.onResume();
         mapView.onResume();
+        // Lanjutkan polling saat Activity kembali ke foreground
+        if (currentRoomId != null) startNotePolling();
     }
 
     @Override
     protected void onPause() {
         super.onPause();
         mapView.onPause();
+        // Hentikan polling saat Activity tidak di foreground agar hemat baterai
+        stopNotePolling();
     }
 
     @Override
@@ -855,5 +868,26 @@ public class MainActivity extends AppCompatActivity {
     protected void onSaveInstanceState(Bundle outState) {
         super.onSaveInstanceState(outState);
         mapView.onSaveInstanceState(outState);
+    }
+    /** Mulai polling note secara berkala setiap NOTE_POLL_INTERVAL_MS */
+    private void startNotePolling() {
+        // Hindari duplikat runnable
+        notePollingHandler.removeCallbacks(notePollingRunnable);
+        notePollingRunnable = new Runnable() {
+            @Override
+            public void run() {
+                fetchRoomNotes();
+                // Jadwalkan ulang setelah interval selesai
+                notePollingHandler.postDelayed(this, NOTE_POLL_INTERVAL_MS);
+            }
+        };
+        notePollingHandler.postDelayed(notePollingRunnable, NOTE_POLL_INTERVAL_MS);
+        Log.d(TAG, "Note polling dimulai (interval " + NOTE_POLL_INTERVAL_MS + "ms)");
+    }
+
+    /** Hentikan polling note */
+    private void stopNotePolling() {
+        notePollingHandler.removeCallbacks(notePollingRunnable);
+        Log.d(TAG, "Note polling dihentikan");
     }
 }
