@@ -26,7 +26,7 @@
         android:layout_height="wrap_content"
         android:orientation="vertical"
         android:background="#1E1E1E"
-        android:padding="16dp"
+        android:padding="20dp"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent">
@@ -38,7 +38,8 @@
             android:text="ACTIVE USERS"
             android:textColor="#888888"
             android:textSize="10sp"
-            android:textStyle="bold" />
+            android:textStyle="bold"
+            android:layout_marginTop="10dp"/>
 
         <TextView
             android:id="@+id/tvActiveUsersCount"
@@ -51,7 +52,6 @@
             android:textStyle="bold" />
     </LinearLayout>
 
-    <!-- tampilan hide lokasi dan insta note -->
     <LinearLayout
         android:id="@+id/panelBottom"
         android:layout_width="match_parent"
@@ -59,33 +59,44 @@
         android:background="#1E1E1E"
         android:gravity="center_vertical"
         android:orientation="horizontal"
-        android:padding="16dp"
+        android:paddingStart="16dp"
+        android:paddingEnd="16dp"
+        android:paddingTop="16dp"
+        android:paddingBottom="66dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toStartOf="parent">
 
-        <!-- togle hide lokasi -->
-        <com.google.android.material.materialswitch.MaterialSwitch
-            android:id="@+id/switchHideLocation"
-            android:layout_width="0dp"
+        <LinearLayout
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:fontFamily="@font/poppins_bold"
-            android:text="Hide My Location"
-            android:textColor="#FFFFFF"
-            app:thumbTint="#00E676" />
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
 
-        <!-- tombol insta foto -->
-        <Button
-            android:id="@+id/btnInstaNote"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="16dp"
-            android:backgroundTint="#00E676"
-            android:fontFamily="@font/poppins_bold"
-            android:text="Insta Note"
-            android:textColor="#000000" />
+            <!-- toggle hide lokasi -->
+            <com.google.android.material.materialswitch.MaterialSwitch
+                android:id="@+id/switchHideLocation"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:fontFamily="@font/poppins_bold"
+                android:text="Hide Location"
+                android:textColor="#FFFFFF"
+                app:thumbTint="#00E676" />
+
+            <!-- tombol insta foto -->
+            <Button
+                android:id="@+id/btnInstaNote"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="16dp"
+                android:backgroundTint="#00E676"
+                android:fontFamily="@font/poppins_bold"
+                android:text="Insta Note"
+                android:textColor="#000000" />
+
+        </LinearLayout>
+
     </LinearLayout>
 
   </androidx.constraintlayout.widget.ConstraintLayout>
