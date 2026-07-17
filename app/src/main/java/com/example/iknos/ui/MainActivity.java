@@ -313,6 +313,7 @@ public class MainActivity extends AppCompatActivity {
                 try {
                     JSONObject data = new JSONObject();
                     data.put("roomId", currentRoomId);
+                    data.put("isHidden", isChecked); // Kirim status hide ke backend
                     socket.emit("toggle_hide", data);
                 } catch (JSONException e) {
                     e.printStackTrace();
@@ -357,6 +358,7 @@ public class MainActivity extends AppCompatActivity {
         io.socket.client.Socket socket = SocketManager.getInstance().getSocket();
 
         if (socket != null) {
+            // Event posisi real-time dari user lain
             socket.on("location_broadcast", args -> {
                 JSONObject data = (JSONObject) args[0];
                 try {
@@ -371,6 +373,19 @@ public class MainActivity extends AppCompatActivity {
 
                 } catch (JSONException e) {
                     Log.e(TAG, "Gagal memparsing data broadcast: " + e.getMessage());
+                }
+            });
+
+            // Event hide/unhide dari user lain -> ubah tampilan marker mereka ke grayscale / berwarna
+            socket.on("user_visibility_changed", args -> {
+                JSONObject data = (JSONObject) args[0];
+                try {
+                    String userId = data.getString("userId");
+                    boolean hidden = data.getBoolean("isHidden");
+                    Log.d(TAG, "User " + userId + " hide status: " + hidden);
+                    runOnUiThread(() -> applyHideStateToMarker(userId, hidden));
+                } catch (JSONException e) {
+                    Log.e(TAG, "Gagal parse user_visibility_changed: " + e.getMessage());
                 }
             });
         }
@@ -406,22 +421,26 @@ public class MainActivity extends AppCompatActivity {
         return IconFactory.getInstance(this).fromBitmap(gsBitmap);
     }
 
-    /** Terapkan tampilan grayscale / berwarna ke marker sendiri berdasarkan status hide */
+    /** Terapkan tampilan grayscale / berwarna ke marker user manapun berdasarkan status hide */
+    private void applyHideStateToMarker(String userId, boolean hidden) {
+        Marker marker = userMarkers.get(userId);
+        Bitmap bitmap = userBitmapCache.get(userId);
+        if (marker == null || bitmap == null) return;
+
+        if (hidden) {
+            marker.setIcon(toGrayscaleIcon(bitmap));
+        } else {
+            Icon colorIcon = IconFactory.getInstance(this).fromBitmap(bitmap);
+            userIconCache.put(userId, colorIcon);
+            marker.setIcon(colorIcon);
+        }
+    }
+
+    /** Shortcut untuk mengubah marker milik sendiri */
     private void applyHideStateToMyMarker(boolean hidden) {
         String myUserId = getMyUserId();
         if (myUserId == null) return;
-        Marker myMarker = userMarkers.get(myUserId);
-        Bitmap myBitmap = userBitmapCache.get(myUserId);
-        if (myMarker == null || myBitmap == null) return;
-
-        if (hidden) {
-            myMarker.setIcon(toGrayscaleIcon(myBitmap));
-        } else {
-            // Kembalikan icon berwarna asli
-            Icon colorIcon = IconFactory.getInstance(this).fromBitmap(myBitmap);
-            userIconCache.put(myUserId, colorIcon);
-            myMarker.setIcon(colorIcon);
-        }
+        applyHideStateToMarker(myUserId, hidden);
     }
 
     private void fetchRoomMembersAvatar() {
