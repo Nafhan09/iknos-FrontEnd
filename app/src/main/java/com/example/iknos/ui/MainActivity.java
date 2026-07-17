@@ -310,18 +310,17 @@ public class MainActivity extends AppCompatActivity {
             io.socket.client.Socket socket = SocketManager.getInstance().getSocket();
 
             if (socket != null && currentRoomId != null) {
-
                 try {
-
                     JSONObject data = new JSONObject();
                     data.put("roomId", currentRoomId);
-
                     socket.emit("toggle_hide", data);
-
                 } catch (JSONException e) {
                     e.printStackTrace();
                 }
             }
+
+            // Ubah tampilan marker sendiri: grayscale saat hide, berwarna saat aktif
+            applyHideStateToMyMarker(isChecked);
 
             if (isChecked) {
                 Toast.makeText(this,
@@ -378,6 +377,8 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private final Map<String, Icon> userIconCache = new HashMap<>();
+    // Cache bitmap asli (berwarna) per user, untuk membuat ulang icon grayscale/berwarna
+    private final Map<String, Bitmap> userBitmapCache = new HashMap<>();
 
     private void updateUserMarker(String userId, double lat, double lng) {
         if (mapLibreMap == null) return;
@@ -390,6 +391,36 @@ public class MainActivity extends AppCompatActivity {
         } else {
             // Marker belum ada -> perlu ambil foto profil dulu, baru buat marker
             loadAvatarAndCreateMarker(userId, lat, lng);
+        }
+    }
+
+    /** Buat icon grayscale (hitam-putih) dari bitmap berwarna */
+    private Icon toGrayscaleIcon(Bitmap colorBitmap) {
+        Bitmap gsBitmap = Bitmap.createBitmap(colorBitmap.getWidth(), colorBitmap.getHeight(), Bitmap.Config.ARGB_8888);
+        Canvas canvas = new Canvas(gsBitmap);
+        android.graphics.ColorMatrix cm = new android.graphics.ColorMatrix();
+        cm.setSaturation(0f);
+        android.graphics.Paint paint = new android.graphics.Paint();
+        paint.setColorFilter(new android.graphics.ColorMatrixColorFilter(cm));
+        canvas.drawBitmap(colorBitmap, 0, 0, paint);
+        return IconFactory.getInstance(this).fromBitmap(gsBitmap);
+    }
+
+    /** Terapkan tampilan grayscale / berwarna ke marker sendiri berdasarkan status hide */
+    private void applyHideStateToMyMarker(boolean hidden) {
+        String myUserId = getMyUserId();
+        if (myUserId == null) return;
+        Marker myMarker = userMarkers.get(myUserId);
+        Bitmap myBitmap = userBitmapCache.get(myUserId);
+        if (myMarker == null || myBitmap == null) return;
+
+        if (hidden) {
+            myMarker.setIcon(toGrayscaleIcon(myBitmap));
+        } else {
+            // Kembalikan icon berwarna asli
+            Icon colorIcon = IconFactory.getInstance(this).fromBitmap(myBitmap);
+            userIconCache.put(myUserId, colorIcon);
+            myMarker.setIcon(colorIcon);
         }
     }
 
@@ -451,8 +482,10 @@ public class MainActivity extends AppCompatActivity {
                         ivAvatar.setImageBitmap(resource);
 
                         Bitmap markerBitmap = viewToBitmap(markerView);
-                        Icon icon = IconFactory.getInstance(MainActivity.this).fromBitmap(markerBitmap);
+                        // Simpan bitmap berwarna asli ke cache
+                        userBitmapCache.put(userId, markerBitmap);
 
+                        Icon icon = IconFactory.getInstance(MainActivity.this).fromBitmap(markerBitmap);
                         userIconCache.put(userId, icon);
                         placeMarkerWithIcon(userId, lat, lng, icon);
                     }
@@ -677,8 +710,6 @@ public class MainActivity extends AppCompatActivity {
         locationCallback = new LocationCallback() {
             @Override
             public void onLocationResult(@NonNull LocationResult locationResult) {
-                if (isHidden) return;
-
                 for (Location location : locationResult.getLocations()) {
                     double lat = location.getLatitude();
                     double lng = location.getLongitude();
@@ -686,11 +717,20 @@ public class MainActivity extends AppCompatActivity {
                     Log.d(TAG, "Lat = " + lat + " Lng = " + lng);
 
                     if (currentRoomId != null) {
-                        SocketManager.getInstance().pushLocation(currentRoomId, lat, lng);
-
                         String myUserId = getMyUserId();
-                        if (myUserId != null) {
-                            updateUserMarker(myUserId, lat, lng);
+
+                        if (!isHidden) {
+                            // Hanya kirim ke server dan update posisi marker saat TIDAK hidden
+                            SocketManager.getInstance().pushLocation(currentRoomId, lat, lng);
+                            if (myUserId != null) {
+                                runOnUiThread(() -> updateUserMarker(myUserId, lat, lng));
+                            }
+                        } else {
+                            // Saat hidden: tetap tampilkan marker di posisi terakhir (tidak digeser)
+                            // Pastikan marker sudah ada di peta (jika belum, buat dulu)
+                            if (myUserId != null && !userMarkers.containsKey(myUserId)) {
+                                runOnUiThread(() -> updateUserMarker(myUserId, lat, lng));
+                            }
                         }
                     }
                 }
