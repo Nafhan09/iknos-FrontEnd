@@ -24,7 +24,7 @@
         android:theme="@style/Theme.Iknos"
         android:usesCleartextTraffic="true">
         <activity
-            android:name=".controllers.LoginActivity"
+            android:name=".ui.LoginActivity"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -33,16 +33,16 @@
             </intent-filter>
         </activity>
         <activity
-            android:name=".controllers.SettingsActivity"
+            android:name=".ui.SettingsActivity"
             android:exported="false" />
         <activity
-            android:name=".controllers.RegisterActivity"
+            android:name=".ui.RegisterActivity"
             android:exported="false" />
         <activity
-            android:name=".controllers.RoomActivity"
+            android:name=".ui.RoomActivity"
             android:exported="false" />
         <activity
-            android:name=".controllers.MainActivity"
+            android:name=".ui.MainActivity"
             android:exported="false" />
 
         <meta-data

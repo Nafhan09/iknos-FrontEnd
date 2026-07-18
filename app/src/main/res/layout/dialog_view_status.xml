@@ -48,6 +48,29 @@
         android:textColor="#FFFFFF"
         android:textSize="15sp" />
 
+    <!-- Menampilkan Kordinat -->
+    <TextView
+        android:id="@+id/tvReceivedCoordinates"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:gravity="center"
+        android:text="Koordinat: -6.2088, 106.8456"
+        android:textColor="#888888"
+        android:textSize="12sp" />
+
+    <!-- Menampilkan Rimayat Unggah -->
+    <TextView
+        android:id="@+id/tvReceivedTimeAgo"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="4dp"
+        android:gravity="center"
+        android:text="1 jam yang lalu"
+        android:textColor="#888888"
+        android:textSize="11sp"
+        android:textStyle="italic" />
+
 </LinearLayout>
 
 <!--Memunculkan foto selfie ukuran besar beserta teks status Insta Note -->
