@@ -24,7 +24,7 @@
         android:theme="@style/Theme.Iknos"
         android:usesCleartextTraffic="true">
         <activity
-            android:name=".ui.LoginActivity"
+            android:name=".controllers.LoginActivity"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -33,26 +33,22 @@
             </intent-filter>
         </activity>
         <activity
-            android:name=".ui.SettingsActivity"
+            android:name=".controllers.SettingsActivity"
             android:exported="false" />
         <activity
-            android:name=".ui.RegisterActivity"
+            android:name=".controllers.RegisterActivity"
             android:exported="false" />
         <activity
-            android:name=".ui.RoomActivity"
+            android:name=".controllers.RoomActivity"
             android:exported="false" />
         <activity
-            android:name=".ui.MainActivity"
+            android:name=".controllers.MainActivity"
             android:exported="false" />
 
         <meta-data
             android:name="preloaded_fonts"
             android:resource="@array/preloaded_fonts" />
 
-        <activity
-            android:name=".map.UserMarkerView"
-            android:exported="false"
-            android:windowSoftInputMode="adjustResize" />
         <activity
             android:name=".map.NoteMarkerView"
             android:exported="false"

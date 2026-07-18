@@ -1,7 +1,7 @@
 package com.example.iknos.controllers;
 
 import com.example.iknos.R;
-import com.example.iknos.ui.LoginActivity;
+import com.example.iknos.controllers.LoginActivity;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
