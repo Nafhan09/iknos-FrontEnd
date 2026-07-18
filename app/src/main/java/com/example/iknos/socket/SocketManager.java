@@ -24,22 +24,25 @@ public class SocketManager {
     }
 
     // Fungsi untuk menyambungkan Android ke Server Backend
+    // Fungsi meliputi validasi token, validasi koneksi dan pencatatan log
     public void connectSocket(String jwtToken) {
         if (mSocket != null && mSocket.connected()) {
-            return; // Jika sudah tersambung, tidak perlu buat koneksi baru
+            // Jika sudah tersambung, tidak perlu buat koneksi baru
+            return;
         }
 
         try {
-            // Sesuai README BE: Autentikasi dikirim lewat handshake auth
+            // Autentikasi dikirim lewat handshake auth, Perlu tervalidasi terlebih dahulu sebelum memulai koneksi dengan websocket
             IO.Options opts = new IO.Options();
             Map<String, String> authData = new HashMap<>();
             authData.put("token", jwtToken);
             opts.auth = authData;
 
-            // Sesuaikan IP jika menggunakan emulator (10.0.2.2 adalah localhost laptop)
+            // Koneksi pada IP Backend
+            // SESUAIKAN IP TERGANTUNG RUNNING DEVICES
             mSocket = IO.socket("http://192.168.1.2:3000", opts);
 
-            // Pasang log sistem untuk memantau status koneksi di Logcat
+            // Log status koneksi di Logcat
             mSocket.on(Socket.EVENT_CONNECT, args -> Log.d(TAG, "WebSocket Connected!!!"));
             mSocket.on(Socket.EVENT_DISCONNECT, args -> Log.d(TAG, "WebSocket Disconnected"));
             mSocket.on(Socket.EVENT_CONNECT_ERROR, args -> Log.e(TAG, "Connect Error: " + args[0]));
@@ -59,7 +62,7 @@ public class SocketManager {
         void onSnapshot(JSONArray snapshot);
     }
 
-    // Fungsi EMIT 1: Mengirim perintah join ke kamar tertentu
+    // Fungsi EMIT 1 untuk Mengirim perintah join ke Room tertentu
     public void joinRoom(String roomId, JoinRoomCallback callback) {
         if (mSocket != null) {
             try {
@@ -90,7 +93,7 @@ public class SocketManager {
         }
     }
 
-    // Fungsi EMIT 2: Mengirim koordinat GPS kita ke server (di-throttle 10 detik oleh BE)
+    // Fungsi EMIT 2 untuk Mengirim koordinat GPS ke server
     public void pushLocation(String roomId, double lat, double lng) {
         if (mSocket != null) {
             try {
@@ -99,7 +102,7 @@ public class SocketManager {
                 data.put("lat", lat);
                 data.put("lng", lng);
                 mSocket.emit("location_update", data);
-                Log.d(TAG, "Push lokasi ke BE: Lat=" + lat + ", Lng=" + lng);
+                Log.d(TAG, "Push koordinat ke Server: Lat=" + lat + ", Lng=" + lng);
             } catch (JSONException e) {
                 e.printStackTrace();
             }

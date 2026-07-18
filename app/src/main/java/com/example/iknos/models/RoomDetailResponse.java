@@ -1,4 +1,4 @@
-package com.example.iknos.room;
+package com.example.iknos.models;
 
 import com.google.gson.annotations.SerializedName;
 import java.util.List;

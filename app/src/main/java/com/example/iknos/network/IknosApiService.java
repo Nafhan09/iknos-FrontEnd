@@ -12,7 +12,7 @@ import com.example.iknos.models.RegisterRequest;
 import com.example.iknos.models.RequestListResponse;
 import com.example.iknos.models.RoomListResponse;
 import com.example.iknos.models.UserProfileResponse;
-import com.example.iknos.room.RoomDetailResponse;
+import com.example.iknos.models.RoomDetailResponse;
 
 import okhttp3.MultipartBody;
 import okhttp3.RequestBody;
