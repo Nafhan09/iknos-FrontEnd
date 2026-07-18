@@ -48,17 +48,18 @@ public class SettingsActivity extends AppCompatActivity {
     private String token;
     private IknosApiService apiService;
 
-    // Launcher untuk memilih gambar dari galeri
+    // Fungsi untuk pilih dan upload gambar
     private final ActivityResultLauncher<String> selectImageLauncher =
-            registerForActivityResult(new ActivityResultContracts.GetContent(), uri -> {
-                if (uri != null) {
-                    // Tampilkan gambar sementara di UI
-                    Glide.with(this).load(uri).into(ivAvatar);
-                    // Upload ke server
-                    uploadImageToServer(uri);
-                }
-            });
+        registerForActivityResult(new ActivityResultContracts.GetContent(), uri -> {
+            if (uri != null) {
+                // Tampilkan gambar sementara di UI
+                Glide.with(this).load(uri).into(ivAvatar);
+                // Upload ke server
+                uploadImageToServer(uri);
+            }
+        });
 
+    // Method meliputi Layouting, validasi token dan event listener
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -98,6 +99,8 @@ public class SettingsActivity extends AppCompatActivity {
         btnLogout.setOnClickListener(v -> forceLogout());
     }
 
+    // Fungsi untuk request data user
+    // Fungsi meliputi penggunaan endpoint,method onResponse untuk validasi pengambilan data dan onFailure untuk validasi koneksi
     private void fetchUserProfile() {
         progressBar.setVisibility(View.VISIBLE);
         apiService.getUserProfile().enqueue(new Callback<UserProfileResponse>() {
@@ -116,6 +119,7 @@ public class SettingsActivity extends AppCompatActivity {
                                 .into(ivAvatar);
                     }
                 } else {
+                    // TODO: GANTI/HAPUS TOAST
                     Toast.makeText(SettingsActivity.this, "Gagal memuat profil", Toast.LENGTH_SHORT).show();
                 }
             }
@@ -123,17 +127,24 @@ public class SettingsActivity extends AppCompatActivity {
             @Override
             public void onFailure(Call<UserProfileResponse> call, Throwable t) {
                 progressBar.setVisibility(View.GONE);
+                // TODO: GANTI/HAPUS TOAST
                 Toast.makeText(SettingsActivity.this, "Error koneksi: " + t.getMessage(), Toast.LENGTH_SHORT).show();
             }
         });
     }
 
+    // Fungsi untuk proses update avatar
+    // Fungsi meliputi pemanggilan fungsi getFileFromUri(), validasi file dan update ke server
     private void uploadImageToServer(Uri fileUri) {
         progressBar.setVisibility(View.VISIBLE);
 
+        // Pemilihan file dilakukan oleh fungsi getFileFromUri()
         File file = getFileFromUri(fileUri);
+        // Validasi file yang dipilih
         if (file == null) {
+            // TODO: GANTI/HAPUS TOAST
             Toast.makeText(this, "Gagal memproses gambar", Toast.LENGTH_SHORT).show();
+
             progressBar.setVisibility(View.GONE);
             return;
         }
@@ -141,13 +152,16 @@ public class SettingsActivity extends AppCompatActivity {
         RequestBody requestFile = RequestBody.create(MediaType.parse(getContentResolver().getType(fileUri)), file);
         MultipartBody.Part body = MultipartBody.Part.createFormData("avatar", file.getName(), requestFile);
 
+        // Proses upload avatar melalui endpoint @PUT("users/me/avatar")
         apiService.uploadAvatar(body).enqueue(new Callback<UserProfileResponse>() {
             @Override
             public void onResponse(Call<UserProfileResponse> call, Response<UserProfileResponse> response) {
                 progressBar.setVisibility(View.GONE);
                 if (response.isSuccessful()) {
+                    // TODO: GANTI/HAPUS TOAST
                     Toast.makeText(SettingsActivity.this, "Avatar berhasil diperbarui", Toast.LENGTH_SHORT).show();
                 } else {
+                    // TODO: GANTI/HAPUS TOAST
                     Toast.makeText(SettingsActivity.this, "Gagal upload avatar", Toast.LENGTH_SHORT).show();
                 }
             }
@@ -155,6 +169,7 @@ public class SettingsActivity extends AppCompatActivity {
             @Override
             public void onFailure(Call<UserProfileResponse> call, Throwable t) {
                 progressBar.setVisibility(View.GONE);
+                // TODO: GANTI/HAPUS TOAST
                 Toast.makeText(SettingsActivity.this, "Error upload: " + t.getMessage(), Toast.LENGTH_SHORT).show();
             }
         });
@@ -163,16 +178,23 @@ public class SettingsActivity extends AppCompatActivity {
     // Fungsi helper untuk mengubah URI galeri menjadi File fisik sementara agar bisa diupload
     private File getFileFromUri(Uri uri) {
         try {
+            // InputStream untuk membaca file
             InputStream inputStream = getContentResolver().openInputStream(uri);
+
+            // Buat Temporary File
             File tempFile = File.createTempFile("avatar_", ".jpg", getCacheDir());
+
+            // Menyalin data file ke dalam Temporary File
             OutputStream out = new FileOutputStream(tempFile);
             byte[] buf = new byte[1024];
             int len;
             while ((len = inputStream.read(buf)) > 0) {
                 out.write(buf, 0, len);
             }
+
             out.close();
             inputStream.close();
+
             return tempFile;
         } catch (Exception e) {
             e.printStackTrace();
@@ -180,6 +202,8 @@ public class SettingsActivity extends AppCompatActivity {
         }
     }
 
+    // Fungsi untuk membantu gagal validasi autentikasi
+    // Fungsi meliputi pembersihan preference dan memindahkan activity pada loginActivity
     private void forceLogout() {
         SharedPreferences prefs = getSharedPreferences("IknosPref", Context.MODE_PRIVATE);
         prefs.edit().clear().apply();
