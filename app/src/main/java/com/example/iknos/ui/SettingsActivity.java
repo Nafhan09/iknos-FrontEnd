@@ -202,7 +202,7 @@ public class SettingsActivity extends AppCompatActivity {
         }
     }
 
-    // Fungsi untuk membantu gagal validasi autentikasi
+    // Fungsi logout
     // Fungsi meliputi pembersihan preference dan memindahkan activity pada loginActivity
     private void forceLogout() {
         SharedPreferences prefs = getSharedPreferences("IknosPref", Context.MODE_PRIVATE);
