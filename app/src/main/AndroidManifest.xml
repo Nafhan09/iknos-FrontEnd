@@ -23,15 +23,22 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.Iknos"
         android:usesCleartextTraffic="true">
+        <!-- Entry point aplikasi: Splash Screen -->
         <activity
-            android:name=".controllers.LoginActivity"
-            android:exported="true">
+            android:name=".controllers.SplashActivity"
+            android:exported="true"
+            android:theme="@style/Theme.Iknos">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
-
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+        <activity
+            android:name=".controllers.LoginActivity"
+            android:exported="false" />
+        <activity
+            android:name=".controllers.TutorialActivity"
+            android:exported="false" />
         <activity
             android:name=".controllers.SettingsActivity"
             android:exported="false" />

@@ -33,18 +33,6 @@ public class LoginActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_login);
 
-        // Penerapan Autentikasi Otomatis dengan memanfaatkan JWT dan SharedPreferences
-        SharedPreferences pref = getSharedPreferences("IknosPref", MODE_PRIVATE);
-        String savedToken = pref.getString("JWT_TOKEN", null);
-        if (savedToken != null && !savedToken.isEmpty()) {
-            // Langsung arahkan ke halaman utama/RoomActivity
-            SocketManager.getInstance().connectSocket(savedToken);
-            Intent intent = new Intent(LoginActivity.this, RoomActivity.class);
-            startActivity(intent);
-            finish();
-            return;
-        }
-
         etEmail = findViewById(R.id.etEmail);
         etPassword = findViewById(R.id.etPassword);
         btnLogin = findViewById(R.id.btnLogin);
@@ -81,8 +69,13 @@ public class LoginActivity extends AppCompatActivity {
                         SocketManager.getInstance().connectSocket(jwtToken);
 
                         // Simpan jwtToken dan userId ke penyimpanan lokal aplikasi dengan menggunakan SharedPreferences
+                        // Tandai pengguna sebagai 'lama' (IS_NEW_USER = false) agar splash tidak muncul lagi
                         SharedPreferences pref = getSharedPreferences("IknosPref", MODE_PRIVATE);
-                        pref.edit().putString("JWT_TOKEN", jwtToken).putString("USER_ID", userId).apply();
+                        pref.edit()
+                                .putString("JWT_TOKEN", jwtToken)
+                                .putString("USER_ID", userId)
+                                .putBoolean("IS_NEW_USER", false)
+                                .apply();
 
                         // TODO: HAPUS/GANTI TOAST
                         Toast.makeText(LoginActivity.this, "Login Berhasil!", Toast.LENGTH_SHORT).show();

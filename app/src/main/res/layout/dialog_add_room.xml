@@ -1,76 +1,164 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:orientation="vertical"
-    android:background="#1E1E1E"
-    android:padding="20dp">
+    android:background="#1A1A1A"
+    android:padding="24dp">
 
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginBottom="16dp"
-        android:fontFamily="@font/poppins_bold"
-        android:text="TAMBAH RUANGAN"
-        android:textColor="#00E676"
-        android:textSize="18sp"
-        android:textStyle="bold" />
-
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:fontFamily="@font/poppins_bold"
-        android:text="Buat Ruangan Baru"
-        android:textColor="#FFFFFF"
-        android:textSize="14sp"
-        android:textStyle="bold" />
-
-    <com.google.android.material.textfield.TextInputLayout
+    <!-- Header -->
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:hint="Nama Ruangan"
-        android:textColorHint="#888888"
-        android:layout_marginTop="4dp"
-        xmlns:app="http://schemas.android.com/apk/res-auto"
-        app:hintTextColor="#00E676"
-        app:boxStrokeColor="#00E676">
-        <com.google.android.material.textfield.TextInputEditText
-            android:id="@+id/etNewRoomName"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:layout_marginBottom="20dp">
+
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:fontFamily="@font/poppins_bold"
+            android:text="Manage Rooms"
+            android:textColor="#FFFFFF"
+            android:textSize="20sp" />
+    </LinearLayout>
+
+    <!-- Tab Bar: Create / Join -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:layout_marginBottom="24dp">
+
+        <TextView
+            android:id="@+id/tabCreate"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:gravity="center"
+            android:paddingBottom="10dp"
+            android:fontFamily="@font/poppins_bold"
+            android:text="Create"
+            android:textColor="#00E676"
+            android:textSize="14sp"
+            android:background="@drawable/tab_underline_selected" />
+
+        <TextView
+            android:id="@+id/tabJoin"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:gravity="center"
+            android:paddingBottom="10dp"
+            android:fontFamily="@font/poppins_bold"
+            android:text="Join"
+            android:textColor="#888888"
+            android:textSize="14sp"
+            android:background="@drawable/tab_underline_unselected" />
+    </LinearLayout>
+
+    <!-- Panel CREATE -->
+    <LinearLayout
+        android:id="@+id/panelCreate"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:visibility="visible">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:fontFamily="@font/poppins_bold"
+            android:text="ROOM NAME"
+            android:textColor="#AAAAAA"
+            android:textSize="11sp"
+            android:letterSpacing="0.1"
+            android:layout_marginBottom="8dp" />
+
+        <com.google.android.material.textfield.TextInputLayout
+            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:textColor="#FFFFFF" />
-    </com.google.android.material.textfield.TextInputLayout>
+            android:hint="e.g. Downtown Squad"
+            android:textColorHint="#555555"
+            app:hintTextColor="#00E676"
+            app:boxStrokeColor="#00E676"
+            app:boxBackgroundColor="#222222"
+            app:startIconDrawable="@android:drawable/ic_menu_edit"
+            app:startIconTint="#555555">
 
-    <View
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/etNewRoomName"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:inputType="text"
+                android:textColor="#FFFFFF" />
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <Button
+            android:id="@+id/btnCreateRoom"
+            android:layout_width="match_parent"
+            android:layout_height="52dp"
+            android:layout_marginTop="24dp"
+            android:backgroundTint="#00E676"
+            android:fontFamily="@font/poppins_bold"
+            android:text="⊕  Create Room"
+            android:textColor="#000000"
+            android:textSize="15sp"
+            android:stateListAnimator="@null" />
+    </LinearLayout>
+
+    <!-- Panel JOIN -->
+    <LinearLayout
+        android:id="@+id/panelJoin"
         android:layout_width="match_parent"
-        android:layout_height="1dp"
-        android:background="#333333"
-        android:layout_marginVertical="16dp"/>
-
-    <TextView
-        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:fontFamily="@font/poppins_bold"
-        android:text="Gabung Ruangan Yang Sudah Ada"
-        android:textColor="#FFFFFF"
-        android:textSize="14sp"
-        android:textStyle="bold" />
+        android:orientation="vertical"
+        android:visibility="gone">
 
-    <com.google.android.material.textfield.TextInputLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:hint="Masukkan Kode Ruangan (Contoh: FAM-123)"
-        android:textColorHint="#888888"
-        android:layout_marginTop="4dp"
-        xmlns:app="http://schemas.android.com/apk/res-auto"
-        app:hintTextColor="#00E676"
-        app:boxStrokeColor="#00E676">
-        <com.google.android.material.textfield.TextInputEditText
-            android:id="@+id/etJoinRoomCode"
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:fontFamily="@font/poppins_bold"
+            android:text="ROOM CODE"
+            android:textColor="#AAAAAA"
+            android:textSize="11sp"
+            android:letterSpacing="0.1"
+            android:layout_marginBottom="8dp" />
+
+        <com.google.android.material.textfield.TextInputLayout
+            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:textColor="#FFFFFF" />
-    </com.google.android.material.textfield.TextInputLayout>
+            android:hint="e.g. FAM-123"
+            android:textColorHint="#555555"
+            app:hintTextColor="#00E676"
+            app:boxStrokeColor="#00E676"
+            app:boxBackgroundColor="#222222">
+
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/etJoinRoomCode"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:inputType="text"
+                android:textColor="#FFFFFF"
+                android:textAllCaps="false" />
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <Button
+            android:id="@+id/btnJoinRoom"
+            android:layout_width="match_parent"
+            android:layout_height="52dp"
+            android:layout_marginTop="24dp"
+            android:backgroundTint="#00E676"
+            android:fontFamily="@font/poppins_bold"
+            android:text="⊕  Join Room"
+            android:textColor="#000000"
+            android:textSize="15sp"
+            android:stateListAnimator="@null" />
+    </LinearLayout>
 
 </LinearLayout>
