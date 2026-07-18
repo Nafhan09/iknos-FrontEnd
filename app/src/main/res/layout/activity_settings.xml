@@ -4,17 +4,16 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/white"
-    tools:context=".controllers.SettingsActivity">
+    android:background="#121212"
+    tools:context=".controllers.SettingsActivity"
+    android:fitsSystemWindows="true">
 
     <com.google.android.material.appbar.MaterialToolbar
         android:id="@+id/toolbarSettings"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="@color/white"
-        app:title="Pengaturan"
         app:titleCentered="true"
-        app:navigationIcon="@android:drawable/ic_menu_revert"
+        app:navigationIcon="@drawable/arrow_left3"
         app:layout_constraintTop_toTopOf="parent" />
 
     <FrameLayout
@@ -39,9 +38,13 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="bottom|end"
-            android:src="@android:drawable/ic_menu_edit"
+            app:srcCompat="@drawable/edit"
             app:fabSize="mini"
-            android:contentDescription="Ubah Avatar" />
+            app:backgroundTint="#00E676"
+            app:tint="#000000"
+            android:contentDescription="Ubah Avatar"
+            app:fabCustomSize="40dp"
+            app:maxImageSize="30dp"/>
     </FrameLayout>
 
     <TextView
@@ -52,7 +55,7 @@
         android:text="Memuat..."
         android:textSize="22sp"
         android:textStyle="bold"
-        android:textColor="@color/black"
+        android:textColor="@color/white"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/frameAvatar" />
@@ -64,7 +67,7 @@
         android:layout_marginTop="8dp"
         android:text="Memuat..."
         android:textSize="16sp"
-        android:textColor="#757575"
+        android:textColor="@color/white"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/tvUsername" />
