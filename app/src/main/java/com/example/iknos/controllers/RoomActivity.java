@@ -6,6 +6,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.ImageButton;
 import android.widget.TextView;
 import android.widget.Toast;
 import androidx.annotation.NonNull;
@@ -30,6 +31,11 @@ import java.util.List;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
+import android.content.SharedPreferences;
+
+import com.bumptech.glide.Glide;
+import de.hdodenhof.circleimageview.CircleImageView;
+import com.example.iknos.models.UserProfileResponse;
 
 import com.example.iknos.network.IknosApiService;
 import com.example.iknos.models.CreateRoomRequest;
@@ -41,7 +47,8 @@ public class RoomActivity extends AppCompatActivity {
     private FloatingActionButton fabAddRoom;
     private final List<RoomModel> roomList = new ArrayList<>();
     private RecyclerView.Adapter<RoomViewHolder> roomAdapter;
-    private Button btnJoinRequests;
+    private ImageButton btnJoinRequests;
+    private CircleImageView ivSettingsAvatar;
 
     // Method untuk inisialisasi RoomActivity saat dibuka
     // Method meliputi layouting, event untuk SettingsActivity, Logika Join Request, Intent MainActivity dengan putExtra Name & id room dan pemanggilan fungsi fetchRealRooms() untuk mengambil data room terbaru dari server/database.
@@ -53,9 +60,9 @@ public class RoomActivity extends AppCompatActivity {
         rvRooms = findViewById(R.id.rvRooms);
         fabAddRoom = findViewById(R.id.fabAddRoom);
         btnJoinRequests = findViewById(R.id.btnJoinRequests);
-        FloatingActionButton fabSettings = findViewById(R.id.fabSettings);
+        ivSettingsAvatar = findViewById(R.id.ivSettingsAvatar);
 
-        fabSettings.setOnClickListener(v -> {Intent intent = new Intent(RoomActivity.this, SettingsActivity.class);startActivity(intent);});
+        ivSettingsAvatar.setOnClickListener(v -> {Intent intent = new Intent(RoomActivity.this, SettingsActivity.class);startActivity(intent);});
 
         //
         btnJoinRequests.setOnClickListener(v -> {
@@ -105,6 +112,35 @@ public class RoomActivity extends AppCompatActivity {
         fetchRealRooms();
 
         fabAddRoom.setOnClickListener(v -> showAddRoomDialog());
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        fetchUserProfile(); // Perbarui avatar setiap kali halaman ini kembali aktif
+    }
+
+    private void fetchUserProfile() {
+        IknosApiService apiService = RetrofitClient.getClient(this).create(IknosApiService.class);
+        apiService.getUserProfile().enqueue(new Callback<UserProfileResponse>() {
+            @Override
+            public void onResponse(Call<UserProfileResponse> call, Response<UserProfileResponse> response) {
+                if (response.isSuccessful() && response.body() != null && response.body().getData() != null) {
+                    String avatarUrl = response.body().getData().getAvatarUrl();
+                    if (avatarUrl != null && !avatarUrl.isEmpty()) {
+                        Glide.with(RoomActivity.this)
+                                .load(avatarUrl)
+                                .placeholder(R.mipmap.ic_launcher_round)
+                                .into(ivSettingsAvatar);
+                    }
+                }
+            }
+
+            @Override
+            public void onFailure(Call<UserProfileResponse> call, Throwable t) {
+                // Jika gagal, biarkan menggunakan gambar default
+            }
+        });
     }
 
     // Fungsi modal untuk Create/Join Room

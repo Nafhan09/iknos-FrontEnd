@@ -7,59 +7,61 @@
     android:layout_height="match_parent"
     android:background="#121212"
     android:padding="16dp"
-    tools:context=".RoomActivity">
+    tools:context=".RoomActivity"
+    android:fitsSystemWindows="true">
 
-    <TextView
-        android:id="@+id/tvRoomTitle"
-        android:layout_width="wrap_content"
+    <LinearLayout
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="16dp"
-        android:fontFamily="@font/poppins_bold"
-        android:text="MY ROOMS"
-        android:textColor="#00E676"
-        android:textSize="24sp"
-        android:textStyle="bold"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
-
-    <TextView
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:padding="10dp"
         android:id="@+id/tvRoomSubtitle"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="4dp"
-        android:fontFamily="@font/poppins_bold"
-        android:text="Maksimal 5 ruangan aktif"
-        android:textColor="#888888"
-        android:textSize="12sp"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/tvRoomTitle" />
+        android:fitsSystemWindows="true">
 
-    <Button
-        android:id="@+id/btnJoinRequests"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="16dp"
-        android:layout_marginEnd="8dp"
-        android:backgroundTint="#00E676"
-        android:fontFamily="@font/poppins_bold"
-        android:text="REQUESTS"
-        android:textColor="#000000"
-        android:textSize="12sp"
-        app:layout_constraintEnd_toStartOf="@id/fabSettings"
-        app:layout_constraintTop_toTopOf="parent" />
+        <ImageButton
+            android:id="@+id/btnJoinRequests"
+            android:layout_width="52dp"
+            android:layout_height="52dp"
+            android:src="@drawable/user_add"
+            android:background="@drawable/bg_border_green"
+            android:scaleType="centerInside"
+            android:padding="12dp"
+            android:contentDescription="Daftar Permintaan"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent" />
 
-    <!--Tombol Setting-->
-    <com.google.android.material.floatingactionbutton.FloatingActionButton
-        android:id="@+id/fabSettings"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_margin="16dp"
-        android:layout_marginTop="560dp"
-        android:layout_marginEnd="16dp"
-        android:contentDescription="Pengaturan"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        />
+        <Space
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1" />
+
+        <TextView
+            android:id="@+id/tvRoomTitle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:fontFamily="@font/poppins_bold"
+            android:text="Iknos"
+            android:textColor="#00E676"
+            android:textSize="24sp"
+            android:textStyle="bold" />
+
+        <Space
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1" />
+
+        <de.hdodenhof.circleimageview.CircleImageView
+            android:id="@+id/ivSettingsAvatar"
+            android:layout_width="52dp"
+            android:layout_height="52dp"
+            android:src="@mipmap/ic_launcher_round"
+            app:civ_border_width="2dp"
+            app:civ_border_color="#333333"
+            android:contentDescription="Pengaturan Profil" />
+
+    </LinearLayout>
 
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/rvRooms"

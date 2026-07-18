@@ -21,7 +21,7 @@
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:fontFamily="@font/poppins_bold"
-            android:text="Manage Rooms"
+            android:text="Tambah Ruangan"
             android:textColor="#FFFFFF"
             android:textSize="20sp" />
     </LinearLayout>
@@ -41,7 +41,7 @@
             android:gravity="center"
             android:paddingBottom="10dp"
             android:fontFamily="@font/poppins_bold"
-            android:text="Create"
+            android:text="Buat"
             android:textColor="#00E676"
             android:textSize="14sp"
             android:background="@drawable/tab_underline_selected" />
@@ -54,8 +54,8 @@
             android:gravity="center"
             android:paddingBottom="10dp"
             android:fontFamily="@font/poppins_bold"
-            android:text="Join"
-            android:textColor="#888888"
+            android:text="Gabung"
+            android:textColor="#00E676"
             android:textSize="14sp"
             android:background="@drawable/tab_underline_unselected" />
     </LinearLayout>
@@ -72,7 +72,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:fontFamily="@font/poppins_bold"
-            android:text="ROOM NAME"
+            android:text="Nama Ruangan"
             android:textColor="#AAAAAA"
             android:textSize="11sp"
             android:letterSpacing="0.1"
@@ -82,12 +82,11 @@
             style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:hint="e.g. Downtown Squad"
+            android:hint=""
             android:textColorHint="#555555"
             app:hintTextColor="#00E676"
             app:boxStrokeColor="#00E676"
             app:boxBackgroundColor="#222222"
-            app:startIconDrawable="@android:drawable/ic_menu_edit"
             app:startIconTint="#555555">
 
             <com.google.android.material.textfield.TextInputEditText
@@ -105,7 +104,7 @@
             android:layout_marginTop="24dp"
             android:backgroundTint="#00E676"
             android:fontFamily="@font/poppins_bold"
-            android:text="⊕  Create Room"
+            android:text="Buat"
             android:textColor="#000000"
             android:textSize="15sp"
             android:stateListAnimator="@null" />
@@ -123,7 +122,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:fontFamily="@font/poppins_bold"
-            android:text="ROOM CODE"
+            android:text="Kode Ruangan"
             android:textColor="#AAAAAA"
             android:textSize="11sp"
             android:letterSpacing="0.1"
@@ -133,7 +132,6 @@
             style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:hint="e.g. FAM-123"
             android:textColorHint="#555555"
             app:hintTextColor="#00E676"
             app:boxStrokeColor="#00E676"
@@ -155,7 +153,7 @@
             android:layout_marginTop="24dp"
             android:backgroundTint="#00E676"
             android:fontFamily="@font/poppins_bold"
-            android:text="⊕  Join Room"
+            android:text="Bergabung"
             android:textColor="#000000"
             android:textSize="15sp"
             android:stateListAnimator="@null" />
