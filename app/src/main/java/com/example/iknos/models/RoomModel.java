@@ -13,6 +13,9 @@ public class RoomModel {
 
     private String ownerId;
 
+    @SerializedName("memberCount")
+    private int memberCount;
+
     public String getId() {
         return id;
     }
@@ -27,5 +30,9 @@ public class RoomModel {
 
     public String getOwnerId() {
         return ownerId;
+    }
+
+    public int getMemberCount() {
+        return memberCount;
     }
 }

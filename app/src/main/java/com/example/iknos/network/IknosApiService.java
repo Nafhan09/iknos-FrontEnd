@@ -79,4 +79,8 @@ public interface IknosApiService {
     // Endpoint untuk Hapus Note berdasarkan roomId dengan method DELETE
     @DELETE("notes/{roomId}")
     Call<BaseResponse> deleteNote(@Path("roomId") String roomId);
+
+    // Keluar dari room secara permanen
+    @DELETE("rooms/{roomId}/leave")
+    Call<BaseResponse> leaveRoom(@Path("roomId") String roomId);
 }

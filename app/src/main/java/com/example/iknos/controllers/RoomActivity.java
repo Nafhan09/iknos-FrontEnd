@@ -84,9 +84,7 @@ public class RoomActivity extends AppCompatActivity {
                 RoomModel roomData = roomList.get(position);
                 holder.tvName.setText(roomData.getName());
                 holder.tvCode.setText("Code: " + roomData.getCode());
-
-                // TODO: GANTI DENGAN JUMLAH ACTIVE USER
-                holder.tvCount.setText("-");
+                holder.tvCount.setText(roomData.getMemberCount() + " anggota");
 
                 holder.itemView.setOnClickListener(v -> {
                     Intent intent = new Intent(RoomActivity.this, MainActivity.class);
@@ -109,7 +107,8 @@ public class RoomActivity extends AppCompatActivity {
         fabAddRoom.setOnClickListener(v -> showAddRoomDialog());
     }
 
-    // Fungsi modal untuk Create/Join Room dengan tampilan tab
+    // Fungsi modal untuk Create/Join Room
+    // Fungsi meliputi layouting, pengkondisian create/join room dan event batal/proses
     private void showAddRoomDialog() {
         View dialogView = LayoutInflater.from(this).inflate(R.layout.dialog_add_room, null);
 
@@ -163,15 +162,20 @@ public class RoomActivity extends AppCompatActivity {
                 public void onResponse(Call<CreateRoomResponse> call, Response<CreateRoomResponse> response) {
                     if (response.isSuccessful() && response.body() != null && response.body().isSuccess()) {
                         RoomModel newRoom = response.body().getData();
+                            // TODO: HAPUS/GANTI TOAST
                         Toast.makeText(RoomActivity.this, "Room berhasil dibuat!\nKode: " + newRoom.getCode(), Toast.LENGTH_LONG).show();
+
+                            // Panggil fungsi untuk mengambil daftar Room sekaligus Refresh data yang ditampilkan
                         fetchRealRooms();
                         dialog.dismiss();
                     } else {
+                            // TODO: HAPUS/GANTI TOAST
                         Toast.makeText(RoomActivity.this, "Gagal membuat room. Maksimal 5 room.", Toast.LENGTH_SHORT).show();
                     }
                 }
                 @Override
                 public void onFailure(Call<CreateRoomResponse> call, Throwable t) {
+                        // TODO: HAPUS/GANTI TOAST
                     Toast.makeText(RoomActivity.this, "Error koneksi: " + t.getMessage(), Toast.LENGTH_SHORT).show();
                 }
             });

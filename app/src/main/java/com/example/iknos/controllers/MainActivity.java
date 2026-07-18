@@ -33,6 +33,7 @@ import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.example.iknos.R;
+import com.example.iknos.models.BaseResponse;
 import com.example.iknos.models.NoteResponse;
 import com.example.iknos.network.IknosApiService;
 import com.example.iknos.network.RetrofitClient;
@@ -195,6 +196,10 @@ public class MainActivity extends AppCompatActivity {
         switchHideLocation = findViewById(R.id.switchHideLocation);
         btnInstaNote = findViewById(R.id.btnInstaNote);
 
+        // Tombol Leave Room
+        Button btnLeaveRoom = findViewById(R.id.btnLeaveRoom);
+        btnLeaveRoom.setOnClickListener(v -> showLeaveRoomConfirmation());
+
         mapView = findViewById(R.id.mapView);
         mapView.onCreate(savedInstanceState);
         mapView.getMapAsync(map -> {
@@ -307,6 +312,7 @@ public class MainActivity extends AppCompatActivity {
             startNotePolling(); // mulai polling berkala setiap 5 detik
             setupSocketListener();
             SocketManager.getInstance().joinRoom(currentRoomId, snapshot -> {
+                int activeCount = 0;
                 for (int i = 0; i < snapshot.length(); i++) {
                     try {
                         JSONObject member = snapshot.getJSONObject(i);
@@ -314,12 +320,15 @@ public class MainActivity extends AppCompatActivity {
                         if (member.has("lat") && !member.isNull("lat")) {
                             double lat = member.getDouble("lat");
                             double lng = member.getDouble("lng");
+                            activeCount++;
                             runOnUiThread(() -> updateUserMarker(userId, lat, lng));
                         }
                     } catch (JSONException e) {
                         e.printStackTrace();
                     }
                 }
+                final int finalCount = activeCount;
+                runOnUiThread(() -> tvActiveUsersCount.setText(finalCount + " aktif"));
             });
         }
 
@@ -390,7 +399,10 @@ public class MainActivity extends AppCompatActivity {
                     Log.d(TAG, "Menerima lokasi member " + userId + ": Lat=" + lat + ", Lng=" + lng);
 
                     // Update UI (marker di peta) wajib di UI Thread
-                    runOnUiThread(() -> updateUserMarker(userId, lat, lng));
+                    runOnUiThread(() -> {
+                        updateUserMarker(userId, lat, lng);
+                        updateActiveUserCount();
+                    });
 
                 } catch (JSONException e) {
                     Log.e(TAG, "Gagal memparsing data broadcast: " + e.getMessage());
@@ -410,6 +422,12 @@ public class MainActivity extends AppCompatActivity {
                 }
             });
         }
+    }
+
+    /** Update label jumlah user aktif berdasarkan jumlah marker di peta */
+    private void updateActiveUserCount() {
+        if (tvActiveUsersCount == null) return;
+        tvActiveUsersCount.setText(userMarkers.size() + " aktif");
     }
 
     private final Map<String, Icon> userIconCache = new HashMap<>();
@@ -935,5 +953,52 @@ public class MainActivity extends AppCompatActivity {
     private void stopNotePolling() {
         notePollingHandler.removeCallbacks(notePollingRunnable);
         Log.d(TAG, "Note polling dihentikan");
+    }
+
+    /** Tampilkan dialog konfirmasi sebelum leave room */
+    private void showLeaveRoomConfirmation() {
+        new MaterialAlertDialogBuilder(this, com.google.android.material.R.style.ThemeOverlay_Material3_MaterialAlertDialog)
+                .setTitle("Keluar dari Ruangan?")
+                .setMessage("Kamu akan meninggalkan ruangan ini. Kamu perlu diundang lagi atau bergabung ulang untuk masuk.")
+                .setPositiveButton("Ya, Keluar", (dialog, which) -> leaveRoom())
+                .setNegativeButton("Batal", (dialog, which) -> dialog.dismiss())
+                .show();
+    }
+
+    /** Panggil REST API leave room, lalu kembali ke RoomActivity */
+    private void leaveRoom() {
+        if (currentRoomId == null) return;
+
+        // Beritahu server via socket terlebih dahulu
+        io.socket.client.Socket socket = SocketManager.getInstance().getSocket();
+        if (socket != null) {
+            try {
+                JSONObject data = new JSONObject();
+                data.put("roomId", currentRoomId);
+                socket.emit("leave_room", data);
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+        }
+
+        // Panggil REST API untuk leave permanen
+        IknosApiService api = RetrofitClient.getClient(this).create(IknosApiService.class);
+        api.leaveRoom(currentRoomId).enqueue(new Callback<BaseResponse>() {
+            @Override
+            public void onResponse(Call<BaseResponse> call, Response<BaseResponse> response) {
+                stopNotePolling();
+                Toast.makeText(MainActivity.this, "Berhasil keluar dari ruangan", Toast.LENGTH_SHORT).show();
+                // Kembali ke daftar room
+                Intent intent = new Intent(MainActivity.this, RoomActivity.class);
+                intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
+                startActivity(intent);
+                finish();
+            }
+
+            @Override
+            public void onFailure(Call<BaseResponse> call, Throwable t) {
+                Toast.makeText(MainActivity.this, "Gagal keluar: " + t.getMessage(), Toast.LENGTH_SHORT).show();
+            }
+        });
     }
 }
