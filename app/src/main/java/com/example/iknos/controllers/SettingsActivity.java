@@ -1,4 +1,4 @@
-package com.example.iknos.ui;
+package com.example.iknos.controllers;
 
 import android.content.Context;
 import android.content.Intent;

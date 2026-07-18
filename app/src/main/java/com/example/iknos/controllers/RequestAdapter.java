@@ -1,4 +1,4 @@
-package com.example.iknos.ui;
+package com.example.iknos.controllers;
 
 import android.view.LayoutInflater;
 import android.view.View;
