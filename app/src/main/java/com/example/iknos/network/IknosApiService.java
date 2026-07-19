@@ -11,6 +11,7 @@ import com.example.iknos.models.NoteResponse;
 import com.example.iknos.models.RegisterRequest;
 import com.example.iknos.models.RequestListResponse;
 import com.example.iknos.models.RoomListResponse;
+import com.example.iknos.models.UpdateUsernameRequest;
 import com.example.iknos.models.UserProfileResponse;
 import com.example.iknos.models.RoomDetailResponse;
 
@@ -57,6 +58,9 @@ public interface IknosApiService {
     // Endpoint untuk Request Data Pengguna (Diri Sendiri) dengan method GET
     @GET("users/me")
     Call<UserProfileResponse> getUserProfile();
+    // Endpoint untuk Update Username dengan method PATCH
+    @PATCH("users/me/username")
+    Call<UserProfileResponse> updateUsername(@Body UpdateUsernameRequest request);
     // Endpoint untuk Update Profil Pengguna dengan method PUT
     @Multipart
     @PUT("users/me/avatar")

@@ -47,18 +47,37 @@
             app:maxImageSize="30dp"/>
     </FrameLayout>
 
-    <TextView
-        android:id="@+id/tvUsername"
+    <LinearLayout
+        android:id="@+id/layoutUsername"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
         android:layout_marginTop="16dp"
-        android:text="Memuat..."
-        android:textSize="22sp"
-        android:textStyle="bold"
-        android:textColor="@color/white"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/frameAvatar" />
+        app:layout_constraintTop_toBottomOf="@id/frameAvatar">
+
+        <TextView
+            android:id="@+id/tvUsername"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Memuat..."
+            android:textSize="22sp"
+            android:textStyle="bold"
+            android:textColor="@color/white" />
+
+        <ImageButton
+            android:id="@+id/btnEditUsername"
+            android:layout_width="32dp"
+            android:layout_height="32dp"
+            android:layout_marginStart="6dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:src="@drawable/edit"
+            android:scaleType="fitCenter"
+            app:tint="#888888"
+            android:contentDescription="Ubah Username" />
+    </LinearLayout>
 
     <TextView
         android:id="@+id/tvEmail"
@@ -70,7 +89,7 @@
         android:textColor="@color/white"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/tvUsername" />
+        app:layout_constraintTop_toBottomOf="@id/layoutUsername" />
 
     <ProgressBar
         android:id="@+id/progressBar"

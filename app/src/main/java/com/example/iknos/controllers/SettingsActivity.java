@@ -6,9 +6,13 @@ import android.content.SharedPreferences;
 import android.net.Uri;
 import android.os.Bundle;
 import android.view.View;
+import android.widget.EditText;
+import android.widget.ImageButton;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
+
+import com.example.iknos.models.UpdateUsernameRequest;
 
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
@@ -44,6 +48,7 @@ public class SettingsActivity extends AppCompatActivity {
     private FloatingActionButton fabChangeAvatar;
     private MaterialButton btnLogout;
     private MaterialToolbar toolbar;
+    private ImageButton btnEditUsername;
 
     private String token;
     private IknosApiService apiService;
@@ -95,8 +100,74 @@ public class SettingsActivity extends AppCompatActivity {
             selectImageLauncher.launch("image/*");
         });
 
+        // Tombol Edit Username
+        btnEditUsername = findViewById(R.id.btnEditUsername);
+        btnEditUsername.setOnClickListener(v -> showEditUsernameDialog());
+
         // Tombol Logout
         btnLogout.setOnClickListener(v -> forceLogout());
+    }
+
+    // Fungsi dialog untuk ubah username
+    private void showEditUsernameDialog() {
+        android.view.View dialogView = getLayoutInflater().inflate(R.layout.dialog_edit_username, null);
+        EditText etNewUsername = dialogView.findViewById(R.id.etNewUsername);
+        etNewUsername.setText(tvUsername.getText());
+
+        androidx.appcompat.app.AlertDialog dialog = new com.google.android.material.dialog.MaterialAlertDialogBuilder(this, com.google.android.material.R.style.ThemeOverlay_Material3_MaterialAlertDialog)
+                .setTitle("Ubah Username")
+                .setView(dialogView)
+                .setBackground(androidx.core.content.ContextCompat.getDrawable(this, R.drawable.bg_dialog_dark))
+                .setPositiveButton("Simpan", null)
+                .setNegativeButton("Batal", (d, w) -> d.dismiss())
+                .create();
+
+        dialog.show();
+
+        // Handle manual agar tidak langsung tertutup saat validasi gagal
+        dialog.getButton(androidx.appcompat.app.AlertDialog.BUTTON_POSITIVE).setTextColor(android.graphics.Color.parseColor("#00E676"));
+        dialog.getButton(androidx.appcompat.app.AlertDialog.BUTTON_NEGATIVE).setTextColor(android.graphics.Color.parseColor("#888888"));
+        dialog.getButton(androidx.appcompat.app.AlertDialog.BUTTON_POSITIVE).setOnClickListener(v -> {
+            String newUsername = etNewUsername.getText().toString().trim();
+            if (newUsername.isEmpty()) {
+                etNewUsername.setError("Username tidak boleh kosong");
+                return;
+            }
+            if (newUsername.length() < 3) {
+                etNewUsername.setError("Username minimal 3 karakter");
+                return;
+            }
+            dialog.dismiss();
+            updateUsernameToServer(newUsername);
+        });
+    }
+
+    // Fungsi request update username ke backend
+    private void updateUsernameToServer(String newUsername) {
+        progressBar.setVisibility(android.view.View.VISIBLE);
+        apiService.updateUsername(new UpdateUsernameRequest(newUsername)).enqueue(new Callback<UserProfileResponse>() {
+            @Override
+            public void onResponse(Call<UserProfileResponse> call, Response<UserProfileResponse> response) {
+                progressBar.setVisibility(android.view.View.GONE);
+                if (response.isSuccessful() && response.body() != null && response.body().getData() != null) {
+                    tvUsername.setText(response.body().getData().getUsername());
+                    Toast.makeText(SettingsActivity.this, "Username berhasil diperbarui", Toast.LENGTH_SHORT).show();
+                } else {
+                    try {
+                        String errBody = response.errorBody() != null ? response.errorBody().string() : "Gagal memperbarui username";
+                        Toast.makeText(SettingsActivity.this, errBody, Toast.LENGTH_LONG).show();
+                    } catch (Exception e) {
+                        Toast.makeText(SettingsActivity.this, "Gagal memperbarui username", Toast.LENGTH_SHORT).show();
+                    }
+                }
+            }
+
+            @Override
+            public void onFailure(Call<UserProfileResponse> call, Throwable t) {
+                progressBar.setVisibility(android.view.View.GONE);
+                Toast.makeText(SettingsActivity.this, "Error: " + t.getMessage(), Toast.LENGTH_SHORT).show();
+            }
+        });
     }
 
     // Fungsi untuk request data user
