@@ -24,10 +24,10 @@ public class TutorialActivity extends AppCompatActivity {
             "Bagikan Insta Note",
             "Siap Beraksi?"};
     private final String[] descs = {
-            "Aplikasi koordinasi sosial real-time. Pantau posisi teman-teman terdekatmu secara langsung di atas peta.",
-            "Tekan tombol (+) untuk membuat Room baru atau masukkan kode unik untuk bergabung. Sebagai pemilik Room, kamu bisa menerima atau menolak permintaan gabung dari user lain.",
-            "Berikan pembaruan status instan ke seluruh anggota Room. Tulis pesan singkat atau bagikan foto selfie serumu saat beraktivitas.",
-            "Tekan tombol di bawah untuk masuk ke halaman utama dan mulai pantau pergerakan timmu!"
+            "Tetap terhubung dengan circle-mu. Cek lokasi teman-teman terdekatmu secara real-time langsung di peta.",
+            "Buat Ruangan baru atau masukkan kode unik untuk join ke Ruangan temanmu.",
+            "Update kabar cepat ke circle-mu. Tulis pesan singkat, atau pamer selfie keseruanmu hari ini!",
+            "Klik tombol di bawah untuk masuk, dan mulai pantau pergerakan teman-temanmu sekarang!"
     };
 
     @Override
