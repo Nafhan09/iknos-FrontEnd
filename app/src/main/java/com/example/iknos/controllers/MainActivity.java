@@ -39,6 +39,10 @@ import com.example.iknos.network.IknosApiService;
 import com.example.iknos.network.RetrofitClient;
 import com.example.iknos.socket.SocketManager;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
+
+import androidx.core.text.HtmlCompat;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 import com.google.android.material.materialswitch.MaterialSwitch;
 import com.google.android.material.textfield.TextInputEditText;
 import android.util.Log;
@@ -88,6 +92,7 @@ public class MainActivity extends AppCompatActivity {
     private TextView tvActiveUsersCount;
     private MaterialSwitch switchHideLocation;
     private Button btnInstaNote;
+    private android.widget.ImageButton btnShowMembers;
 
     // Room
     private String currentRoomId;
@@ -200,6 +205,10 @@ public class MainActivity extends AppCompatActivity {
         Button btnLeaveRoom = findViewById(R.id.btnLeaveRoom);
         btnLeaveRoom.setOnClickListener(v -> showLeaveRoomConfirmation());
 
+        // Tombol Tampilkan Member
+        btnShowMembers = findViewById(R.id.btnShowMembers);
+        btnShowMembers.setOnClickListener(v -> showMembersDialog());
+
         mapView = findViewById(R.id.mapView);
         mapView.onCreate(savedInstanceState);
         mapView.getMapAsync(map -> {
@@ -226,6 +235,8 @@ public class MainActivity extends AppCompatActivity {
                     TextView tvNoteTimestamp = infoView.findViewById(R.id.tvNoteTimestamp);
                     ImageView ivNoteImage = infoView.findViewById(R.id.ivNoteImage);
                     TextView tvNoteText = infoView.findViewById(R.id.tvNoteText);
+                    TextView tvNoteCoordinates = infoView.findViewById(R.id.tvNoteCoordinates);
+                    TextView tvNoteTimeAgo = infoView.findViewById(R.id.tvNoteTimeAgo);
                     View layoutNoNote = infoView.findViewById(R.id.layoutNoNote);
 
                     NoteResponse.NoteData note = userNotesCache.get(userId);
@@ -237,6 +248,14 @@ public class MainActivity extends AppCompatActivity {
 
                     Button btnDeleteNote = infoView.findViewById(R.id.btnDeleteNote);
 
+                    LatLng pos = marker.getPosition();
+                    if (pos != null) {
+                        tvNoteCoordinates.setText(String.format(java.util.Locale.getDefault(), "Koordinat: %.4f, %.4f", pos.getLatitude(), pos.getLongitude()));
+                        tvNoteCoordinates.setVisibility(View.VISIBLE);
+                    } else {
+                        tvNoteCoordinates.setVisibility(View.GONE);
+                    }
+
                     if (note != null) {
                         String username = (note.getUser() != null && note.getUser().getUsername() != null)
                                 ? note.getUser().getUsername() : userId;
@@ -246,33 +265,49 @@ public class MainActivity extends AppCompatActivity {
                             String dateStr = note.getUpdatedAt().length() >= 10
                                     ? note.getUpdatedAt().substring(0, 10) : note.getUpdatedAt();
                             tvNoteTimestamp.setText(dateStr);
+
+                            try {
+                                String dateString = note.getUpdatedAt();
+                                java.text.SimpleDateFormat sdf;
+                                if (dateString.contains(".")) {
+                                    sdf = new java.text.SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", java.util.Locale.getDefault());
+                                } else {
+                                    sdf = new java.text.SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'", java.util.Locale.getDefault());
+                                }
+                                sdf.setTimeZone(java.util.TimeZone.getTimeZone("UTC"));
+                                java.util.Date date = sdf.parse(dateString);
+                                if (date != null) {
+                                    CharSequence timeAgo = android.text.format.DateUtils.getRelativeTimeSpanString(
+                                            date.getTime(), System.currentTimeMillis(), android.text.format.DateUtils.MINUTE_IN_MILLIS);
+                                    tvNoteTimeAgo.setText(timeAgo);
+                                    tvNoteTimeAgo.setVisibility(View.VISIBLE);
+                                }
+                            } catch (Exception e) {
+                                e.printStackTrace();
+                                tvNoteTimeAgo.setVisibility(View.GONE);
+                            }
+                        } else {
+                            tvNoteTimeAgo.setVisibility(View.GONE);
                         }
 
-                        boolean hasImage = note.getImageUrl() != null && !note.getImageUrl().isEmpty();
-                        boolean hasText = note.getText() != null && !note.getText().isEmpty();
-
-                        if (hasImage) {
+                        if (note.getImageUrl() != null && !note.getImageUrl().isEmpty()) {
                             ivNoteImage.setVisibility(View.VISIBLE);
-                            Glide.with(MainActivity.this)
-                                    .load(note.getImageUrl())
-                                    .into(ivNoteImage);
+                            Glide.with(MainActivity.this).load(note.getImageUrl()).into(ivNoteImage);
                         } else {
                             ivNoteImage.setVisibility(View.GONE);
                         }
-                        if (hasText) {
+
+                        if (note.getText() != null && !note.getText().isEmpty()) {
                             tvNoteText.setVisibility(View.VISIBLE);
                             tvNoteText.setText(note.getText());
                         } else {
                             tvNoteText.setVisibility(View.GONE);
                         }
-                        if (!hasImage && !hasText) {
-                            layoutNoNote.setVisibility(View.VISIBLE);
-                        } else {
-                            layoutNoNote.setVisibility(View.GONE);
-                        }
-                        
-                        // Tampilkan tombol Hapus Note hanya jika ini adalah note milik pengguna sendiri
-                        if (userId.equals(getMyUserId())) {
+
+                        layoutNoNote.setVisibility(View.GONE);
+                        // Hanya owner note yang bisa hapus
+                        String myUserId = getSharedPreferences("IknosPref", MODE_PRIVATE).getString("USER_ID", "");
+                        if (myUserId.equals(userId)) {
                             btnDeleteNote.setVisibility(View.VISIBLE);
                             btnDeleteNote.setOnClickListener(v -> {
                                 deleteNote();
@@ -281,23 +316,17 @@ public class MainActivity extends AppCompatActivity {
                         } else {
                             btnDeleteNote.setVisibility(View.GONE);
                         }
-                        
                     } else {
-                        String fallbackUsername = userUsernameCache.containsKey(userId) ? userUsernameCache.get(userId) : userId;
-                        tvNoteUsername.setText(fallbackUsername);
-                        layoutNoNote.setVisibility(View.VISIBLE);
+                        tvNoteUsername.setText(userUsernameCache.containsKey(userId) ? userUsernameCache.get(userId) : userId);
+                        tvNoteTimestamp.setText("");
                         ivNoteImage.setVisibility(View.GONE);
                         tvNoteText.setVisibility(View.GONE);
+                        tvNoteTimeAgo.setVisibility(View.GONE);
+                        layoutNoNote.setVisibility(View.VISIBLE);
                         btnDeleteNote.setVisibility(View.GONE);
                     }
-
                     return infoView;
                 }
-            });
-
-            // Klik marker -> tampilkan InfoWindow bawaan
-            mapLibreMap.setOnMarkerClickListener(marker -> {
-                return false; // false = biarkan MapLibre menampilkan InfoWindow
             });
         });
 
@@ -383,6 +412,47 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
+
+    // Fungsi Tampilkan Daftar Member Room
+    private void showMembersDialog() {
+        if (currentRoomId == null || currentRoomId.isEmpty()) return;
+
+        IknosApiService apiService = RetrofitClient.getClient(this).create(IknosApiService.class);
+        apiService.getRoomDetail(currentRoomId).enqueue(new Callback<RoomDetailResponse>() {
+            @Override
+            public void onResponse(Call<RoomDetailResponse> call, Response<RoomDetailResponse> response) {
+                if (response.isSuccessful() && response.body() != null && response.body().success) {
+                    View dialogView = LayoutInflater.from(MainActivity.this).inflate(R.layout.dialog_member_list, null);
+                    RecyclerView rvMembers = dialogView.findViewById(R.id.rvMembers);
+                    rvMembers.setLayoutManager(new LinearLayoutManager(MainActivity.this));
+                    MemberAdapter adapter = new MemberAdapter(MainActivity.this, response.body().data.members);
+                    rvMembers.setAdapter(adapter);
+
+                    androidx.appcompat.app.AlertDialog dialog = new MaterialAlertDialogBuilder(MainActivity.this)
+                            .setView(dialogView)
+                            .setBackground(androidx.core.content.ContextCompat.getDrawable(MainActivity.this, R.drawable.bg_dialog_dark))
+                            .setNegativeButton("Tutup", null)
+                            .show();
+
+                    dialog.getButton(androidx.appcompat.app.AlertDialog.BUTTON_NEGATIVE).setTextColor(android.graphics.Color.parseColor("#00E676"));
+
+                    android.view.Window window = dialog.getWindow();
+                    if (window != null) {
+                        android.util.DisplayMetrics metrics = getResources().getDisplayMetrics();
+                        int width = (int) (metrics.widthPixels * 0.90);
+                        window.setLayout(width, android.view.ViewGroup.LayoutParams.WRAP_CONTENT);
+                    }
+                } else {
+                    Toast.makeText(MainActivity.this, "Gagal mengambil data member", Toast.LENGTH_SHORT).show();
+                }
+            }
+
+            @Override
+            public void onFailure(Call<RoomDetailResponse> call, Throwable t) {
+                Toast.makeText(MainActivity.this, "Error koneksi: " + t.getMessage(), Toast.LENGTH_SHORT).show();
+            }
+        });
+    }
 
     private void setupSocketListener() {
         io.socket.client.Socket socket = SocketManager.getInstance().getSocket();
@@ -643,6 +713,7 @@ public class MainActivity extends AppCompatActivity {
 
         androidx.appcompat.app.AlertDialog dialog = new MaterialAlertDialogBuilder(this, com.google.android.material.R.style.ThemeOverlay_Material3_MaterialAlertDialog)
                 .setView(dialogView)
+                .setBackground(androidx.core.content.ContextCompat.getDrawable(this, R.drawable.bg_dialog_dark))
                 .setPositiveButton("Update", null) // handle secara manual agar bisa validasi
                 .setNegativeButton("Batal", (d, which) -> d.dismiss())
                 .create();
@@ -957,9 +1028,13 @@ public class MainActivity extends AppCompatActivity {
 
     /** Tampilkan dialog konfirmasi sebelum leave room */
     private void showLeaveRoomConfirmation() {
+        CharSequence customTitle = HtmlCompat.fromHtml("<font color='#00E676'>Keluar dari Ruangan?</font>", HtmlCompat.FROM_HTML_MODE_LEGACY);
+        CharSequence customMessage = HtmlCompat.fromHtml("<font color='#FFFFFF'>Kamu akan meninggalkan ruangan ini. Kamu perlu bergabung ulang lagi untuk masuk.</font>", HtmlCompat.FROM_HTML_MODE_LEGACY);
+
         new MaterialAlertDialogBuilder(this, com.google.android.material.R.style.ThemeOverlay_Material3_MaterialAlertDialog)
-                .setTitle("Keluar dari Ruangan?")
-                .setMessage("Kamu akan meninggalkan ruangan ini. Kamu perlu diundang lagi atau bergabung ulang untuk masuk.")
+                .setTitle(customTitle)
+                .setMessage(customMessage)
+                .setBackground(androidx.core.content.ContextCompat.getDrawable(this, R.drawable.bg_dialog_dark))
                 .setPositiveButton("Ya, Keluar", (dialog, which) -> leaveRoom())
                 .setNegativeButton("Batal", (dialog, which) -> dialog.dismiss())
                 .show();

@@ -79,6 +79,31 @@
         android:visibility="gone"
         android:lineSpacingMultiplier="1.2" />
 
+    <!-- Kordinat Pengguna -->
+    <TextView
+        android:id="@+id/tvNoteCoordinates"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:gravity="center"
+        android:text=""
+        android:textColor="#888888"
+        android:textSize="11sp"
+        android:visibility="gone" />
+
+    <!-- Riwayat Waktu -->
+    <TextView
+        android:id="@+id/tvNoteTimeAgo"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="4dp"
+        android:gravity="center"
+        android:text=""
+        android:textColor="#888888"
+        android:textSize="11sp"
+        android:textStyle="italic"
+        android:visibility="gone" />
+
     <!-- Pesan jika tidak ada note sama sekali -->
     <LinearLayout
         android:id="@+id/layoutNoNote"
