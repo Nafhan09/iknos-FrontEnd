@@ -14,7 +14,7 @@ import java.io.IOException;
 public class RetrofitClient {
     private static Retrofit retrofit = null;
     // SESUAIKAN IP TERGANTUNG RUNNING DEVICES
-    private static final String BASE_URL = "http://192.168.1.2:3000/api/";
+    private static final String BASE_URL = "https://iknos-be.onrender.com/api/";
 
     public static Retrofit getClient(Context context) {
         if (retrofit == null) {

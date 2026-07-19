@@ -40,7 +40,7 @@ public class SocketManager {
 
             // Koneksi pada IP Backend
             // SESUAIKAN IP TERGANTUNG RUNNING DEVICES
-            mSocket = IO.socket("http://192.168.1.2:3000", opts);
+            mSocket = IO.socket("https://iknos-be.onrender.com", opts);
 
             // Log status koneksi di Logcat
             mSocket.on(Socket.EVENT_CONNECT, args -> Log.d(TAG, "WebSocket Connected!!!"));
