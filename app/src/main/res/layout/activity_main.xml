@@ -47,7 +47,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:fontFamily="@font/poppins_bold"
-                android:text="ACTIVE USERS"
+                android:text="Pengguna Aktif"
                 android:textColor="#888888"
                 android:textSize="10sp"
                 android:textStyle="bold"
@@ -87,7 +87,7 @@
             android:layout_height="36dp"
             android:backgroundTint="#FF1744"
             android:fontFamily="@font/poppins_bold"
-            android:text="Leave"
+            android:text="Keluar"
             android:textColor="#FFFFFF"
             android:textSize="12sp"
             android:stateListAnimator="@null"
@@ -124,7 +124,7 @@
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
                 android:fontFamily="@font/poppins_bold"
-                android:text="Hide Location"
+                android:text="Sembunyikan"
                 android:textColor="#FFFFFF"
                 app:thumbTint="@color/switch_thumb"
                 app:trackTint="@color/bg_switch_track"/>
@@ -137,7 +137,7 @@
                 android:layout_marginStart="16dp"
                 android:backgroundTint="#00E676"
                 android:fontFamily="@font/poppins_bold"
-                android:text="Insta Note"
+                android:text="Note"
                 android:textColor="#000000" />
 
         </LinearLayout>
