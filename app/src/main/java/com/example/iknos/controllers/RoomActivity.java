@@ -64,16 +64,16 @@ public class RoomActivity extends AppCompatActivity {
 
         ivSettingsAvatar.setOnClickListener(v -> {Intent intent = new Intent(RoomActivity.this, SettingsActivity.class);startActivity(intent);});
 
-        //
         btnJoinRequests.setOnClickListener(v -> {
             if (roomList.isEmpty()) {
-                // TODO: HAPUS/GANTI TOAST
-                Toast.makeText(RoomActivity.this, "Belum ada room", Toast.LENGTH_SHORT).show();
+                // Tampilkan dialog kosong jika pengguna belum memiliki room
+                showRequestDialog(new ArrayList<>(), "");
                 return;
             }
 
             String roomId = roomList.get(0).getId();
-            loadPendingRequests(roomId);
+            String roomName = roomList.get(0).getName();
+            loadPendingRequests(roomId, roomName);
         });
 
         rvRooms.setLayoutManager(new LinearLayoutManager(this));
@@ -274,7 +274,7 @@ public class RoomActivity extends AppCompatActivity {
     }
 
     // Fungsi Request List Pending Request (Permintaan Join Room)
-    private void loadPendingRequests(String roomId) {
+    private void loadPendingRequests(String roomId, String roomName) {
         IknosApiService apiService = RetrofitClient.getClient(RoomActivity.this).create(IknosApiService.class);
 
         apiService.getPendingRequests(roomId).enqueue(new Callback<RequestListResponse>() {
@@ -283,7 +283,7 @@ public class RoomActivity extends AppCompatActivity {
                 if(response.isSuccessful() && response.body()!=null && response.body().isSuccess()){
                     List<JoinRequestModel> requests = response.body().getData();
 
-                    showRequestDialog(requests);
+                    showRequestDialog(requests, roomName);
                 }
             }
 
@@ -296,23 +296,29 @@ public class RoomActivity extends AppCompatActivity {
     }
 
     // Fungsi Modal untuk Pending Request
-    private void showRequestDialog(List<JoinRequestModel> requests) {
+    private void showRequestDialog(List<JoinRequestModel> requests, String roomName) {
         View dialogView = LayoutInflater.from(this).inflate(R.layout.dialog_request, null);
 
         RecyclerView rvRequests = dialogView.findViewById(R.id.rvRequests);
 
         rvRequests.setLayoutManager(new LinearLayoutManager(this));
 
-        RequestAdapter adapter = new RequestAdapter(this, requests);
+        RequestAdapter adapter = new RequestAdapter(this, requests, roomName);
 
         rvRequests.setAdapter(adapter);
 
-        new MaterialAlertDialogBuilder(this).setTitle("Permintaan Bergabung").setView(dialogView).setNegativeButton("Tutup", null).show();
+        androidx.appcompat.app.AlertDialog dialog = new MaterialAlertDialogBuilder(this)
+                .setView(dialogView)
+                .setBackground(androidx.core.content.ContextCompat.getDrawable(this, R.drawable.bg_dialog_dark))
+                .setNegativeButton("Tutup", null)
+                .show();
+
+        dialog.getButton(androidx.appcompat.app.AlertDialog.BUTTON_NEGATIVE).setTextColor(android.graphics.Color.parseColor("#00E676"));
     }
 
     // Fungsi pemrosesan Pending Request Join Room
     // Fungsi meliputi pemanggilan fungsi loadPendingRequests(roomId) untuk mendapatkan data terbaru dan accept/reject request
-    public void approveOrRejectUser(String requestId, String actionName, String roomId) {
+    public void approveOrRejectUser(String requestId, String actionName, String roomId, String roomName) {
         IknosApiService apiService = RetrofitClient.getClient(RoomActivity.this).create(IknosApiService.class);
 
         ApprovalBody body = new ApprovalBody(actionName);
@@ -324,7 +330,7 @@ public class RoomActivity extends AppCompatActivity {
                     // TODO: HAPUS/GANTI TOAST
                     Toast.makeText(RoomActivity.this, "Request berhasil di-" + actionName, Toast.LENGTH_SHORT).show();
 
-                    loadPendingRequests(roomId);
+                    loadPendingRequests(roomId, roomName);
                 }
             }
 
