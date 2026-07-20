@@ -80,6 +80,24 @@ public class SettingsActivity extends AppCompatActivity {
 
         apiService = RetrofitClient.getClient(this).create(IknosApiService.class);
 
+        // Ambil data kiriman dari Intent untuk pre-populate UI secara instan
+        String extraUsername = getIntent().getStringExtra("EXTRA_USERNAME");
+        String extraEmail = getIntent().getStringExtra("EXTRA_EMAIL");
+        String extraAvatarUrl = getIntent().getStringExtra("EXTRA_AVATAR_URL");
+
+        if (extraUsername != null && !extraUsername.isEmpty()) {
+            tvUsername.setText(extraUsername);
+        }
+        if (extraEmail != null && !extraEmail.isEmpty()) {
+            tvEmail.setText(extraEmail);
+        }
+        if (extraAvatarUrl != null && !extraAvatarUrl.isEmpty()) {
+            Glide.with(this)
+                    .load(extraAvatarUrl)
+                    .placeholder(R.mipmap.ic_launcher_round)
+                    .into(ivAvatar);
+        }
+
         // Ambil token dari SharedPreferences
         SharedPreferences prefs = getSharedPreferences("IknosPref", MODE_PRIVATE);
         token = prefs.getString("JWT_TOKEN", null);

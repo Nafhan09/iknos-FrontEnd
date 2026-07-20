@@ -13,6 +13,7 @@ import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
 import com.example.iknos.R;
 import com.example.iknos.models.RoomModel;
@@ -49,6 +50,13 @@ public class RoomActivity extends AppCompatActivity {
     private RecyclerView.Adapter<RoomViewHolder> roomAdapter;
     private ImageButton btnJoinRequests;
     private CircleImageView ivSettingsAvatar;
+    private SwipeRefreshLayout swipeRefreshRoom;
+
+    private String cachedUsername = "";
+    private String cachedEmail = "";
+    private String cachedAvatarUrl = "";
+    private final List<JoinRequestModel> cachedRequests = new ArrayList<>();
+    private RequestAdapter activeRequestAdapter;
 
     // Method untuk inisialisasi RoomActivity saat dibuka
     // Method meliputi layouting, event untuk SettingsActivity, Logika Join Request, Intent MainActivity dengan putExtra Name & id room dan pemanggilan fungsi fetchRealRooms() untuk mengambil data room terbaru dari server/database.
@@ -61,19 +69,32 @@ public class RoomActivity extends AppCompatActivity {
         fabAddRoom = findViewById(R.id.fabAddRoom);
         btnJoinRequests = findViewById(R.id.btnJoinRequests);
         ivSettingsAvatar = findViewById(R.id.ivSettingsAvatar);
+        swipeRefreshRoom = findViewById(R.id.swipeRefreshRoom);
 
-        ivSettingsAvatar.setOnClickListener(v -> {Intent intent = new Intent(RoomActivity.this, SettingsActivity.class);startActivity(intent);});
+        swipeRefreshRoom.setOnRefreshListener(this::fetchRealRooms);
+
+        ivSettingsAvatar.setOnClickListener(v -> {
+            Intent intent = new Intent(RoomActivity.this, SettingsActivity.class);
+            intent.putExtra("EXTRA_USERNAME", cachedUsername);
+            intent.putExtra("EXTRA_EMAIL", cachedEmail);
+            intent.putExtra("EXTRA_AVATAR_URL", cachedAvatarUrl);
+            startActivity(intent);
+        });
 
         btnJoinRequests.setOnClickListener(v -> {
             if (roomList.isEmpty()) {
-                // Tampilkan dialog kosong jika pengguna belum memiliki room
-                showRequestDialog(new ArrayList<>(), "");
+                showRequestDialog(cachedRequests, "");
                 return;
             }
 
             String roomId = roomList.get(0).getId();
             String roomName = roomList.get(0).getName();
-            loadPendingRequests(roomId, roomName);
+            
+            // Tampilkan dialog secara instan dengan cache yang ada saat ini
+            showRequestDialog(cachedRequests, roomName);
+            
+            // Trigger fetch ulang di background untuk memperbarui data
+            loadPendingRequestsSilently(roomId, roomName);
         });
 
         rvRooms.setLayoutManager(new LinearLayoutManager(this));
@@ -126,10 +147,14 @@ public class RoomActivity extends AppCompatActivity {
             @Override
             public void onResponse(Call<UserProfileResponse> call, Response<UserProfileResponse> response) {
                 if (response.isSuccessful() && response.body() != null && response.body().getData() != null) {
-                    String avatarUrl = response.body().getData().getAvatarUrl();
-                    if (avatarUrl != null && !avatarUrl.isEmpty()) {
+                    UserProfileResponse.UserData user = response.body().getData();
+                    cachedUsername = user.getUsername();
+                    cachedEmail = user.getEmail();
+                    cachedAvatarUrl = user.getAvatarUrl();
+
+                    if (cachedAvatarUrl != null && !cachedAvatarUrl.isEmpty()) {
                         Glide.with(RoomActivity.this)
-                                .load(avatarUrl)
+                                .load(cachedAvatarUrl)
                                 .placeholder(R.mipmap.ic_launcher_round)
                                 .into(ivSettingsAvatar);
                     }
@@ -255,10 +280,18 @@ public class RoomActivity extends AppCompatActivity {
         apiService.getMyRooms().enqueue(new Callback<RoomListResponse>() {
             @Override
             public void onResponse(Call<RoomListResponse> call, Response<RoomListResponse> response) {
+                if (swipeRefreshRoom != null) {
+                    swipeRefreshRoom.setRefreshing(false);
+                }
                 if (response.isSuccessful() && response.body() != null && response.body().isSuccess()) {
                     roomList.clear();
                     roomList.addAll(response.body().getData());
                     roomAdapter.notifyDataSetChanged();
+
+                    // Pre-fetch pending requests in background
+                    if (!roomList.isEmpty()) {
+                        loadPendingRequestsSilently(roomList.get(0).getId(), roomList.get(0).getName());
+                    }
                 } else {
                     // TODO: HAPUS/GANTI TOAST
                     Toast.makeText(RoomActivity.this, "Gagal mengambil daftar room", Toast.LENGTH_SHORT).show();
@@ -267,30 +300,37 @@ public class RoomActivity extends AppCompatActivity {
 
             @Override
             public void onFailure(Call<RoomListResponse> call, Throwable t) {
+                if (swipeRefreshRoom != null) {
+                    swipeRefreshRoom.setRefreshing(false);
+                }
                 // TODO: HAPUS/GANTI TOAST
                 Toast.makeText(RoomActivity.this, t.getMessage(), Toast.LENGTH_SHORT).show();
             }
         });
     }
 
-    // Fungsi Request List Pending Request (Permintaan Join Room)
-    private void loadPendingRequests(String roomId, String roomName) {
+    // Fungsi Request List Pending Request (Permintaan Join Room) di background (Silent)
+    private void loadPendingRequestsSilently(String roomId, String roomName) {
         IknosApiService apiService = RetrofitClient.getClient(RoomActivity.this).create(IknosApiService.class);
 
         apiService.getPendingRequests(roomId).enqueue(new Callback<RequestListResponse>() {
             @Override
             public void onResponse(Call<RequestListResponse> call, Response<RequestListResponse> response) {
-                if(response.isSuccessful() && response.body()!=null && response.body().isSuccess()){
+                if (response.isSuccessful() && response.body() != null && response.body().isSuccess()) {
                     List<JoinRequestModel> requests = response.body().getData();
+                    cachedRequests.clear();
+                    cachedRequests.addAll(requests);
 
-                    showRequestDialog(requests, roomName);
+                    // Update UI jika dialog sedang aktif terbuka
+                    if (activeRequestAdapter != null) {
+                        activeRequestAdapter.notifyDataSetChanged();
+                    }
                 }
             }
 
             @Override
             public void onFailure(Call<RequestListResponse> call, Throwable t) {
-                // TODO: HAPUS/GANTI TOAST
-                Toast.makeText(RoomActivity.this, t.getMessage(), Toast.LENGTH_SHORT).show();
+                // Gagal di background, biarkan saja agar tidak mengganggu UI
             }
         });
     }
@@ -303,21 +343,22 @@ public class RoomActivity extends AppCompatActivity {
 
         rvRequests.setLayoutManager(new LinearLayoutManager(this));
 
-        RequestAdapter adapter = new RequestAdapter(this, requests, roomName);
+        // Simpan referensi ke active adapter agar bisa diupdate jika ada refresh data
+        activeRequestAdapter = new RequestAdapter(this, requests, roomName);
 
-        rvRequests.setAdapter(adapter);
+        rvRequests.setAdapter(activeRequestAdapter);
 
         androidx.appcompat.app.AlertDialog dialog = new MaterialAlertDialogBuilder(this)
                 .setView(dialogView)
                 .setBackground(androidx.core.content.ContextCompat.getDrawable(this, R.drawable.bg_dialog_dark))
-                .setNegativeButton("Tutup", null)
+                .setNegativeButton("Tutup", (dialogInterface, which) -> activeRequestAdapter = null)
                 .show();
 
         dialog.getButton(androidx.appcompat.app.AlertDialog.BUTTON_NEGATIVE).setTextColor(android.graphics.Color.parseColor("#00E676"));
     }
 
     // Fungsi pemrosesan Pending Request Join Room
-    // Fungsi meliputi pemanggilan fungsi loadPendingRequests(roomId) untuk mendapatkan data terbaru dan accept/reject request
+    // Fungsi meliputi pemanggilan fungsi loadPendingRequestsSilently(roomId) untuk mendapatkan data terbaru dan accept/reject request
     public void approveOrRejectUser(String requestId, String actionName, String roomId, String roomName) {
         IknosApiService apiService = RetrofitClient.getClient(RoomActivity.this).create(IknosApiService.class);
 
@@ -330,7 +371,8 @@ public class RoomActivity extends AppCompatActivity {
                     // TODO: HAPUS/GANTI TOAST
                     Toast.makeText(RoomActivity.this, "Request berhasil di-" + actionName, Toast.LENGTH_SHORT).show();
 
-                    loadPendingRequests(roomId, roomName);
+                    // Refresh daftar request secara silent
+                    loadPendingRequestsSilently(roomId, roomName);
                 }
             }
 
