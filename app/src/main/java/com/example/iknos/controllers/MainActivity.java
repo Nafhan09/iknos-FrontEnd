@@ -566,6 +566,21 @@ public class MainActivity extends AppCompatActivity {
                                 if (member.user != null) {
                                     userAvatarUrlCache.put(member.userId, member.user.avatarUrl);
                                     userUsernameCache.put(member.userId, member.user.username);
+
+                                    // Menggambar kordinat pengguna secara langsung dari database (lewati interval websocket)
+                                    if (member.lastLat != null && member.lastLng != null && !member.isHidden) {
+                                        final double lat = member.lastLat;
+                                        final double lng = member.lastLng;
+                                        runOnUiThread(() -> loadAvatarAndCreateMarker(member.userId, lat, lng));
+                                    } else {
+                                        // Jika user di-hide atau tidak punya kordinat, hapus marker lamanya dari peta jika ada
+                                        runOnUiThread(() -> {
+                                            Marker existing = userMarkers.remove(member.userId);
+                                            if (existing != null) {
+                                                mapLibreMap.removeMarker(existing);
+                                            }
+                                        });
+                                    }
                                 }
                             }
                             Log.d(TAG, "Berhasil fetch avatar " + userAvatarUrlCache.size() + " member Room");
@@ -634,6 +649,11 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void placeMarkerWithIcon(String userId, double lat, double lng, Icon icon) {
+        Marker oldMarker = userMarkers.get(userId);
+        if (oldMarker != null) {
+            mapLibreMap.removeMarker(oldMarker);
+        }
+
         MarkerOptions markerOptions = new MarkerOptions()
                 .position(new LatLng(lat, lng))
                 .icon(icon)
@@ -644,6 +664,11 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void placeMarkerWithDefaultIcon(String userId, double lat, double lng) {
+        Marker oldMarker = userMarkers.get(userId);
+        if (oldMarker != null) {
+            mapLibreMap.removeMarker(oldMarker);
+        }
+
         MarkerOptions markerOptions = new MarkerOptions()
                 .position(new LatLng(lat, lng))
                 .title(userId);

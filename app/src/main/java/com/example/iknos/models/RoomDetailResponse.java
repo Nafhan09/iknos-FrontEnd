@@ -28,6 +28,15 @@ public class RoomDetailResponse {
         @SerializedName("userId")
         public String userId;
 
+        @SerializedName("isHidden")
+        public boolean isHidden;
+
+        @SerializedName("lastLat")
+        public Double lastLat;
+
+        @SerializedName("lastLng")
+        public Double lastLng;
+
         @SerializedName("user")
         public UserInfo user;
     }
