@@ -8,7 +8,7 @@ import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.TextView;
-import android.widget.Toast;
+import com.google.android.material.snackbar.Snackbar;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
@@ -214,7 +214,7 @@ public class RoomActivity extends AppCompatActivity {
         btnCreateRoom.setOnClickListener(v -> {
             String roomName = etNewRoomName.getText() != null ? etNewRoomName.getText().toString().trim() : "";
             if (roomName.isEmpty()) {
-                Toast.makeText(this, "Nama ruangan tidak boleh kosong!", Toast.LENGTH_SHORT).show();
+                Snackbar.make(findViewById(android.R.id.content), "Nama ruangan tidak boleh kosong!", Snackbar.LENGTH_SHORT).show();
                 return;
             }
             IknosApiService api = RetrofitClient.getClient(RoomActivity.this).create(IknosApiService.class);
@@ -224,20 +224,20 @@ public class RoomActivity extends AppCompatActivity {
                     if (response.isSuccessful() && response.body() != null && response.body().isSuccess()) {
                         RoomModel newRoom = response.body().getData();
                             // TODO: HAPUS/GANTI TOAST
-                        Toast.makeText(RoomActivity.this, "Room berhasil dibuat!\nKode: " + newRoom.getCode(), Toast.LENGTH_LONG).show();
+                        Snackbar.make(findViewById(android.R.id.content), "Room berhasil dibuat!\nKode: " + newRoom.getCode(), Snackbar.LENGTH_LONG).show();
 
                             // Panggil fungsi untuk mengambil daftar Room sekaligus Refresh data yang ditampilkan
                         fetchRealRooms();
                         dialog.dismiss();
                     } else {
                             // TODO: HAPUS/GANTI TOAST
-                        Toast.makeText(RoomActivity.this, "Gagal membuat room. Maksimal 5 room.", Toast.LENGTH_SHORT).show();
+                        Snackbar.make(findViewById(android.R.id.content), "Gagal membuat room. Maksimal 5 room.", Snackbar.LENGTH_SHORT).show();
                     }
                 }
                 @Override
                 public void onFailure(Call<CreateRoomResponse> call, Throwable t) {
                         // TODO: HAPUS/GANTI TOAST
-                    Toast.makeText(RoomActivity.this, "Error koneksi: " + t.getMessage(), Toast.LENGTH_SHORT).show();
+                    Snackbar.make(findViewById(android.R.id.content), "Error koneksi: " + t.getMessage(), Snackbar.LENGTH_SHORT).show();
                 }
             });
         });
@@ -246,7 +246,7 @@ public class RoomActivity extends AppCompatActivity {
         btnJoinRoom.setOnClickListener(v -> {
             String roomCode = etJoinRoomCode.getText() != null ? etJoinRoomCode.getText().toString().trim() : "";
             if (roomCode.isEmpty()) {
-                Toast.makeText(this, "Kode ruangan tidak boleh kosong!", Toast.LENGTH_SHORT).show();
+                Snackbar.make(findViewById(android.R.id.content), "Kode ruangan tidak boleh kosong!", Snackbar.LENGTH_SHORT).show();
                 return;
             }
             IknosApiService api = RetrofitClient.getClient(RoomActivity.this).create(IknosApiService.class);
@@ -254,16 +254,16 @@ public class RoomActivity extends AppCompatActivity {
                 @Override
                 public void onResponse(Call<CreateRoomResponse> call, Response<CreateRoomResponse> response) {
                     if (response.isSuccessful() && response.body() != null && response.body().isSuccess()) {
-                        Toast.makeText(RoomActivity.this, "Permintaan bergabung dikirim.\nMenunggu persetujuan Owner!", Toast.LENGTH_LONG).show();
+                        Snackbar.make(findViewById(android.R.id.content), "Permintaan bergabung dikirim.\nMenunggu persetujuan Owner!", Snackbar.LENGTH_LONG).show();
                         fetchRealRooms();
                         dialog.dismiss();
                     } else {
-                        Toast.makeText(RoomActivity.this, "Gagal join room. Cek kembali kode room.", Toast.LENGTH_SHORT).show();
+                        Snackbar.make(findViewById(android.R.id.content), "Gagal join room. Cek kembali kode room.", Snackbar.LENGTH_SHORT).show();
                     }
                 }
                 @Override
                 public void onFailure(Call<CreateRoomResponse> call, Throwable t) {
-                    Toast.makeText(RoomActivity.this, "Error koneksi: " + t.getMessage(), Toast.LENGTH_SHORT).show();
+                    Snackbar.make(findViewById(android.R.id.content), "Error koneksi: " + t.getMessage(), Snackbar.LENGTH_SHORT).show();
                 }
             });
         });
@@ -294,7 +294,7 @@ public class RoomActivity extends AppCompatActivity {
                     }
                 } else {
                     // TODO: HAPUS/GANTI TOAST
-                    Toast.makeText(RoomActivity.this, "Gagal mengambil daftar room", Toast.LENGTH_SHORT).show();
+                    Snackbar.make(findViewById(android.R.id.content), "Gagal mengambil daftar room", Snackbar.LENGTH_SHORT).show();
                 }
             }
 
@@ -304,7 +304,7 @@ public class RoomActivity extends AppCompatActivity {
                     swipeRefreshRoom.setRefreshing(false);
                 }
                 // TODO: HAPUS/GANTI TOAST
-                Toast.makeText(RoomActivity.this, t.getMessage(), Toast.LENGTH_SHORT).show();
+                Snackbar.make(findViewById(android.R.id.content), t.getMessage(), Snackbar.LENGTH_SHORT).show();
             }
         });
     }
@@ -369,7 +369,7 @@ public class RoomActivity extends AppCompatActivity {
             public void onResponse(Call<BaseResponse> call, Response<BaseResponse> response) {
                 if (response.isSuccessful() && response.body() != null && response.body().isSuccess()) {
                     // TODO: HAPUS/GANTI TOAST
-                    Toast.makeText(RoomActivity.this, "Request berhasil di-" + actionName, Toast.LENGTH_SHORT).show();
+                    Snackbar.make(findViewById(android.R.id.content), "Request berhasil di-" + actionName, Snackbar.LENGTH_SHORT).show();
 
                     // Refresh daftar request secara silent
                     loadPendingRequestsSilently(roomId, roomName);
@@ -379,7 +379,7 @@ public class RoomActivity extends AppCompatActivity {
             @Override
             public void onFailure(Call<BaseResponse> call, Throwable t) {
                 // TODO: HAPUS/GANTI TOAST
-                Toast.makeText(RoomActivity.this, "Error: " + t.getMessage(), Toast.LENGTH_SHORT).show();
+                Snackbar.make(findViewById(android.R.id.content), "Error: " + t.getMessage(), Snackbar.LENGTH_SHORT).show();
             }
         });
     }

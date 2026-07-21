@@ -3,7 +3,7 @@ package com.example.iknos.controllers;
 import android.os.Bundle;
 import android.widget.Button;
 import android.widget.TextView;
-import android.widget.Toast;
+import com.google.android.material.snackbar.Snackbar;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.example.iknos.R;
@@ -42,7 +42,7 @@ public class RegisterActivity extends AppCompatActivity {
 
             if (usernameInput.isEmpty() || emailInput.isEmpty() || passwordInput.isEmpty()) {
                 // TODO: HAPUS/GANTI TOAST
-                Toast.makeText(RegisterActivity.this, "Semua kolom harus diisi!", Toast.LENGTH_SHORT).show();
+                Snackbar.make(findViewById(android.R.id.content), "Semua kolom harus diisi!", Snackbar.LENGTH_SHORT).show();
                 return;
             }
 
@@ -58,19 +58,19 @@ public class RegisterActivity extends AppCompatActivity {
 
                     if (response.isSuccessful() && response.body() != null && response.body().isSuccess()) {
                         // TODO: HAPUS/GANTI TOAST
-                        Toast.makeText(RegisterActivity.this, "Registrasi Berhasil! Silakan Login.", Toast.LENGTH_SHORT).show();
+                        Snackbar.make(findViewById(android.R.id.content), "Registrasi Berhasil! Silakan Login.", Snackbar.LENGTH_SHORT).show();
                         finish();
 
                     } else {
                         // TODO: HAPUS/GANTI TOAST
-                        Toast.makeText(RegisterActivity.this, "Registrasi Gagal! Email/Username mungkin sudah terpakai.", Toast.LENGTH_SHORT).show();
+                        Snackbar.make(findViewById(android.R.id.content), "Registrasi Gagal! Email/Username mungkin sudah terpakai.", Snackbar.LENGTH_SHORT).show();
                     }
                 }
 
                 @Override
                 public void onFailure(Call<LoginResponse> call, Throwable t) {
                     // TODO: HAPUS/GANTI TOAST
-                    Toast.makeText(RegisterActivity.this, "Error Koneksi: " + t.getMessage(), Toast.LENGTH_SHORT).show();
+                    Snackbar.make(findViewById(android.R.id.content), "Error Koneksi: " + t.getMessage(), Snackbar.LENGTH_SHORT).show();
                 }
             });
         });

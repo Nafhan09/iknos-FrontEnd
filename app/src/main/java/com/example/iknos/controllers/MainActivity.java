@@ -26,7 +26,7 @@ import java.util.Map;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
-import android.widget.Toast;
+import com.google.android.material.snackbar.Snackbar;
 import androidx.activity.OnBackPressedCallback;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
@@ -139,7 +139,7 @@ public class MainActivity extends AppCompatActivity {
                             }
                         } catch (Exception e) {
                             Log.e(TAG, "Gagal memuat foto resolusi tinggi: " + e.getMessage());
-                            Toast.makeText(this, "Gagal memuat foto", Toast.LENGTH_SHORT).show();
+                            Snackbar.make(findViewById(android.R.id.content), "Gagal memuat foto", Snackbar.LENGTH_SHORT).show();
                         }
                     } else if (result.getData() != null && result.getData().getExtras() != null) {
                         // Fallback ke thumbnail jika currentPhotoUri null
@@ -383,13 +383,13 @@ public class MainActivity extends AppCompatActivity {
             applyHideStateToMyMarker(isChecked);
 
             if (isChecked) {
-                Toast.makeText(this,
+                Snackbar.make(findViewById(android.R.id.content),
                         "Lokasi disembunyikan",
-                        Toast.LENGTH_SHORT).show();
+                        Snackbar.LENGTH_SHORT).show();
             } else {
-                Toast.makeText(this,
+                Snackbar.make(findViewById(android.R.id.content),
                         "Lokasi dibagikan kembali",
-                        Toast.LENGTH_SHORT).show();
+                        Snackbar.LENGTH_SHORT).show();
             }
 
         });
@@ -443,13 +443,13 @@ public class MainActivity extends AppCompatActivity {
                         window.setLayout(width, android.view.ViewGroup.LayoutParams.WRAP_CONTENT);
                     }
                 } else {
-                    Toast.makeText(MainActivity.this, "Gagal mengambil data member", Toast.LENGTH_SHORT).show();
+                    Snackbar.make(findViewById(android.R.id.content), "Gagal mengambil data member", Snackbar.LENGTH_SHORT).show();
                 }
             }
 
             @Override
             public void onFailure(Call<RoomDetailResponse> call, Throwable t) {
-                Toast.makeText(MainActivity.this, "Error koneksi: " + t.getMessage(), Toast.LENGTH_SHORT).show();
+                Snackbar.make(findViewById(android.R.id.content), "Error koneksi: " + t.getMessage(), Snackbar.LENGTH_SHORT).show();
             }
         });
     }
@@ -729,10 +729,10 @@ public class MainActivity extends AppCompatActivity {
                     intent.putExtra(MediaStore.EXTRA_OUTPUT, currentPhotoUri);
                     cameraLauncher.launch(intent);
                 } catch (Exception e) {
-                    Toast.makeText(this, "Gagal membuat file untuk foto", Toast.LENGTH_SHORT).show();
+                    Snackbar.make(findViewById(android.R.id.content), "Gagal membuat file untuk foto", Snackbar.LENGTH_SHORT).show();
                 }
             } else {
-                Toast.makeText(this, "Tidak ada aplikasi kamera", Toast.LENGTH_SHORT).show();
+                Snackbar.make(findViewById(android.R.id.content), "Tidak ada aplikasi kamera", Snackbar.LENGTH_SHORT).show();
             }
         });
 
@@ -749,7 +749,7 @@ public class MainActivity extends AppCompatActivity {
         dialog.getButton(androidx.appcompat.app.AlertDialog.BUTTON_POSITIVE).setOnClickListener(v -> {
             String statusText = etNoteText.getText() != null ? etNoteText.getText().toString().trim() : "";
             if (statusText.isEmpty() && capturedSelfieBitmap == null) {
-                Toast.makeText(this, "Note tidak boleh kosong! Hapus note dengan tombol Hapus di bawah", Toast.LENGTH_SHORT).show();
+                Snackbar.make(findViewById(android.R.id.content), "Note tidak boleh kosong! Hapus note dengan tombol Hapus di bawah", Snackbar.LENGTH_SHORT).show();
                 return;
             }
             uploadNote(statusText, capturedSelfieBitmap);
@@ -765,19 +765,19 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onResponse(Call<com.example.iknos.models.BaseResponse> call, Response<com.example.iknos.models.BaseResponse> response) {
                 if (response.isSuccessful()) {
-                    Toast.makeText(MainActivity.this, "Note berhasil dihapus", Toast.LENGTH_SHORT).show();
+                    Snackbar.make(findViewById(android.R.id.content), "Note berhasil dihapus", Snackbar.LENGTH_SHORT).show();
                     // Karena note hilang dari DB, hapus dari cache local dan tutup info window di map
                     String myUserId = getMyUserId();
                     if (myUserId != null) userNotesCache.remove(myUserId);
                     fetchRoomNotes(); 
                 } else {
-                    Toast.makeText(MainActivity.this, "Gagal hapus note", Toast.LENGTH_SHORT).show();
+                    Snackbar.make(findViewById(android.R.id.content), "Gagal hapus note", Snackbar.LENGTH_SHORT).show();
                 }
             }
 
             @Override
             public void onFailure(Call<com.example.iknos.models.BaseResponse> call, Throwable t) {
-                Toast.makeText(MainActivity.this, "Error: " + t.getMessage(), Toast.LENGTH_SHORT).show();
+                Snackbar.make(findViewById(android.R.id.content), "Error: " + t.getMessage(), Snackbar.LENGTH_SHORT).show();
             }
         });
     }
@@ -794,15 +794,15 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onResponse(Call<com.example.iknos.models.BaseResponse> call, Response<com.example.iknos.models.BaseResponse> response) {
                 if (response.isSuccessful()) {
-                    Toast.makeText(MainActivity.this, "Insta Note berhasil diperbarui!", Toast.LENGTH_SHORT).show();
+                    Snackbar.make(findViewById(android.R.id.content), "Insta Note berhasil diperbarui!", Snackbar.LENGTH_SHORT).show();
                     fetchRoomNotes(); // refresh cache note
                 } else {
-                    Toast.makeText(MainActivity.this, "Gagal update note: " + response.code(), Toast.LENGTH_SHORT).show();
+                    Snackbar.make(findViewById(android.R.id.content), "Gagal update note: " + response.code(), Snackbar.LENGTH_SHORT).show();
                 }
             }
             @Override
             public void onFailure(Call<com.example.iknos.models.BaseResponse> call, Throwable t) {
-                Toast.makeText(MainActivity.this, "Error: " + t.getMessage(), Toast.LENGTH_SHORT).show();
+                Snackbar.make(findViewById(android.R.id.content), "Error: " + t.getMessage(), Snackbar.LENGTH_SHORT).show();
             }
         };
 
@@ -810,7 +810,7 @@ public class MainActivity extends AppCompatActivity {
             // Ubah Bitmap menjadi File sementara
             File imageFile = bitmapToTempFile(imageBitmap);
             if (imageFile == null) {
-                Toast.makeText(this, "Gagal memproses gambar", Toast.LENGTH_SHORT).show();
+                Snackbar.make(findViewById(android.R.id.content), "Gagal memproses gambar", Snackbar.LENGTH_SHORT).show();
                 return;
             }
             RequestBody reqFile = RequestBody.create(MediaType.parse("image/jpeg"), imageFile);
@@ -820,7 +820,7 @@ public class MainActivity extends AppCompatActivity {
 
         } else if (hasImage) {
             File imageFile = bitmapToTempFile(imageBitmap);
-            if (imageFile == null) { Toast.makeText(this, "Gagal memproses gambar", Toast.LENGTH_SHORT).show(); return; }
+            if (imageFile == null) { Snackbar.make(findViewById(android.R.id.content), "Gagal memproses gambar", Snackbar.LENGTH_SHORT).show(); return; }
             RequestBody reqFile = RequestBody.create(MediaType.parse("image/jpeg"), imageFile);
             MultipartBody.Part imgPart = MultipartBody.Part.createFormData("image", imageFile.getName(), reqFile);
             api.upsertNoteImageOnly(currentRoomId, imgPart).enqueue(callback);
@@ -950,10 +950,10 @@ public class MainActivity extends AppCompatActivity {
 
             } else {
 
-                Toast.makeText(
-                        this,
+                Snackbar.make(
+                        findViewById(android.R.id.content),
                         "Aplikasi membutuhkan izin lokasi",
-                        Toast.LENGTH_LONG
+                        Snackbar.LENGTH_LONG
                 ).show();
             }
         }
@@ -1087,7 +1087,7 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onResponse(Call<BaseResponse> call, Response<BaseResponse> response) {
                 stopNotePolling();
-                Toast.makeText(MainActivity.this, "Berhasil keluar dari ruangan", Toast.LENGTH_SHORT).show();
+                Snackbar.make(findViewById(android.R.id.content), "Berhasil keluar dari ruangan", Snackbar.LENGTH_SHORT).show();
                 // Kembali ke daftar room
                 Intent intent = new Intent(MainActivity.this, RoomActivity.class);
                 intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
@@ -1097,7 +1097,7 @@ public class MainActivity extends AppCompatActivity {
 
             @Override
             public void onFailure(Call<BaseResponse> call, Throwable t) {
-                Toast.makeText(MainActivity.this, "Gagal keluar: " + t.getMessage(), Toast.LENGTH_SHORT).show();
+                Snackbar.make(findViewById(android.R.id.content), "Gagal keluar: " + t.getMessage(), Snackbar.LENGTH_SHORT).show();
             }
         });
     }

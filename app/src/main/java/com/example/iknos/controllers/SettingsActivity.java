@@ -10,7 +10,7 @@ import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.ProgressBar;
 import android.widget.TextView;
-import android.widget.Toast;
+import com.google.android.material.snackbar.Snackbar;
 
 import com.example.iknos.models.UpdateUsernameRequest;
 
@@ -169,13 +169,13 @@ public class SettingsActivity extends AppCompatActivity {
                 progressBar.setVisibility(android.view.View.GONE);
                 if (response.isSuccessful() && response.body() != null && response.body().getData() != null) {
                     tvUsername.setText(response.body().getData().getUsername());
-                    Toast.makeText(SettingsActivity.this, "Username berhasil diperbarui", Toast.LENGTH_SHORT).show();
+                    Snackbar.make(findViewById(android.R.id.content), "Username berhasil diperbarui", Snackbar.LENGTH_SHORT).show();
                 } else {
                     try {
                         String errBody = response.errorBody() != null ? response.errorBody().string() : "Gagal memperbarui username";
-                        Toast.makeText(SettingsActivity.this, errBody, Toast.LENGTH_LONG).show();
+                        Snackbar.make(findViewById(android.R.id.content), errBody, Snackbar.LENGTH_LONG).show();
                     } catch (Exception e) {
-                        Toast.makeText(SettingsActivity.this, "Gagal memperbarui username", Toast.LENGTH_SHORT).show();
+                        Snackbar.make(findViewById(android.R.id.content), "Gagal memperbarui username", Snackbar.LENGTH_SHORT).show();
                     }
                 }
             }
@@ -183,7 +183,7 @@ public class SettingsActivity extends AppCompatActivity {
             @Override
             public void onFailure(Call<UserProfileResponse> call, Throwable t) {
                 progressBar.setVisibility(android.view.View.GONE);
-                Toast.makeText(SettingsActivity.this, "Error: " + t.getMessage(), Toast.LENGTH_SHORT).show();
+                Snackbar.make(findViewById(android.R.id.content), "Error: " + t.getMessage(), Snackbar.LENGTH_SHORT).show();
             }
         });
     }
@@ -209,7 +209,7 @@ public class SettingsActivity extends AppCompatActivity {
                     }
                 } else {
                     // TODO: GANTI/HAPUS TOAST
-                    Toast.makeText(SettingsActivity.this, "Gagal memuat profil", Toast.LENGTH_SHORT).show();
+                    Snackbar.make(findViewById(android.R.id.content), "Gagal memuat profil", Snackbar.LENGTH_SHORT).show();
                 }
             }
 
@@ -217,7 +217,7 @@ public class SettingsActivity extends AppCompatActivity {
             public void onFailure(Call<UserProfileResponse> call, Throwable t) {
                 progressBar.setVisibility(View.GONE);
                 // TODO: GANTI/HAPUS TOAST
-                Toast.makeText(SettingsActivity.this, "Error koneksi: " + t.getMessage(), Toast.LENGTH_SHORT).show();
+                Snackbar.make(findViewById(android.R.id.content), "Error koneksi: " + t.getMessage(), Snackbar.LENGTH_SHORT).show();
             }
         });
     }
@@ -232,7 +232,7 @@ public class SettingsActivity extends AppCompatActivity {
         // Validasi file yang dipilih
         if (file == null) {
             // TODO: GANTI/HAPUS TOAST
-            Toast.makeText(this, "Gagal memproses gambar", Toast.LENGTH_SHORT).show();
+            Snackbar.make(findViewById(android.R.id.content), "Gagal memproses gambar", Snackbar.LENGTH_SHORT).show();
 
             progressBar.setVisibility(View.GONE);
             return;
@@ -248,10 +248,10 @@ public class SettingsActivity extends AppCompatActivity {
                 progressBar.setVisibility(View.GONE);
                 if (response.isSuccessful()) {
                     // TODO: GANTI/HAPUS TOAST
-                    Toast.makeText(SettingsActivity.this, "Avatar berhasil diperbarui", Toast.LENGTH_SHORT).show();
+                    Snackbar.make(findViewById(android.R.id.content), "Avatar berhasil diperbarui", Snackbar.LENGTH_SHORT).show();
                 } else {
                     // TODO: GANTI/HAPUS TOAST
-                    Toast.makeText(SettingsActivity.this, "Gagal upload avatar", Toast.LENGTH_SHORT).show();
+                    Snackbar.make(findViewById(android.R.id.content), "Gagal upload avatar", Snackbar.LENGTH_SHORT).show();
                 }
             }
 
@@ -259,7 +259,7 @@ public class SettingsActivity extends AppCompatActivity {
             public void onFailure(Call<UserProfileResponse> call, Throwable t) {
                 progressBar.setVisibility(View.GONE);
                 // TODO: GANTI/HAPUS TOAST
-                Toast.makeText(SettingsActivity.this, "Error upload: " + t.getMessage(), Toast.LENGTH_SHORT).show();
+                Snackbar.make(findViewById(android.R.id.content), "Error upload: " + t.getMessage(), Snackbar.LENGTH_SHORT).show();
             }
         });
     }
