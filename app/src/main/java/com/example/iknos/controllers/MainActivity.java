@@ -89,6 +89,11 @@ public class MainActivity extends AppCompatActivity {
     private final Map<String, String> userUsernameCache = new HashMap<>();
     // Cache note setiap anggota room (userId -> NoteData)
     private final Map<String, NoteResponse.NoteData> userNotesCache = new HashMap<>();
+    
+    // Status offline/online
+    private int totalRoomMembers = 0;
+    private final Map<String, Long> userLastSeenMap = new HashMap<>();
+    private final Map<String, Boolean> userHiddenMap = new HashMap<>();
     private TextView tvActiveUsersCount;
     private MaterialSwitch switchHideLocation;
     private Button btnInstaNote;
@@ -114,6 +119,11 @@ public class MainActivity extends AppCompatActivity {
     private static final long NOTE_POLL_INTERVAL_MS = 5_000L;
     private final android.os.Handler notePollingHandler = new android.os.Handler(android.os.Looper.getMainLooper());
     private Runnable notePollingRunnable;
+
+    // Polling status aktif berkala (60 detik)
+    private static final long ACTIVE_POLL_INTERVAL_MS = 60_000L;
+    private final android.os.Handler activeStatusHandler = new android.os.Handler(android.os.Looper.getMainLooper());
+    private Runnable activeStatusRunnable;
 
 
 
@@ -339,25 +349,31 @@ public class MainActivity extends AppCompatActivity {
             fetchRoomMembersAvatar();
             fetchRoomNotes(); // ambil note semua anggota di awal
             startNotePolling(); // mulai polling berkala setiap 5 detik
+            startActiveStatusPolling(); // mulai polling status aktif
             setupSocketListener();
             SocketManager.getInstance().joinRoom(currentRoomId, snapshot -> {
-                int activeCount = 0;
+                long now = System.currentTimeMillis();
                 for (int i = 0; i < snapshot.length(); i++) {
                     try {
                         JSONObject member = snapshot.getJSONObject(i);
                         String userId = member.getString("userId");
+                        
+                        if (member.has("updatedAt") && !member.isNull("updatedAt")) {
+                            String dateString = member.getString("updatedAt");
+                            long time = parseDate(dateString);
+                            if (time > 0) userLastSeenMap.put(userId, time);
+                        }
+                        
                         if (member.has("lat") && !member.isNull("lat")) {
                             double lat = member.getDouble("lat");
                             double lng = member.getDouble("lng");
-                            activeCount++;
                             runOnUiThread(() -> updateUserMarker(userId, lat, lng));
                         }
                     } catch (JSONException e) {
                         e.printStackTrace();
                     }
                 }
-                final int finalCount = activeCount;
-                runOnUiThread(() -> tvActiveUsersCount.setText(finalCount + " aktif"));
+                runOnUiThread(this::checkActiveUsers);
             });
         }
 
@@ -468,10 +484,12 @@ public class MainActivity extends AppCompatActivity {
 
                     Log.d(TAG, "Menerima lokasi member " + userId + ": Lat=" + lat + ", Lng=" + lng);
 
+                    userLastSeenMap.put(userId, System.currentTimeMillis());
+
                     // Update UI (marker di peta) wajib di UI Thread
                     runOnUiThread(() -> {
                         updateUserMarker(userId, lat, lng);
-                        updateActiveUserCount();
+                        checkActiveUsers();
                     });
 
                 } catch (JSONException e) {
@@ -486,7 +504,8 @@ public class MainActivity extends AppCompatActivity {
                     String userId = data.getString("userId");
                     boolean hidden = data.getBoolean("isHidden");
                     Log.d(TAG, "User " + userId + " hide status: " + hidden);
-                    runOnUiThread(() -> applyHideStateToMarker(userId, hidden));
+                    userHiddenMap.put(userId, hidden);
+                    runOnUiThread(() -> updateMarkerVisualState(userId));
                 } catch (JSONException e) {
                     Log.e(TAG, "Gagal parse user_visibility_changed: " + e.getMessage());
                 }
@@ -495,9 +514,39 @@ public class MainActivity extends AppCompatActivity {
     }
 
     /** Update label jumlah user aktif berdasarkan jumlah marker di peta */
-    private void updateActiveUserCount() {
-        if (tvActiveUsersCount == null) return;
-        tvActiveUsersCount.setText(userMarkers.size() + " aktif");
+    /** Update label jumlah user aktif berdasarkan timestamp last seen */
+    private void checkActiveUsers() {
+        long now = System.currentTimeMillis();
+        int activeCount = 0;
+        
+        for (String userId : userMarkers.keySet()) {
+            Long lastSeen = userLastSeenMap.getOrDefault(userId, 0L);
+            if ((now - lastSeen) <= 120_000L) {
+                activeCount++;
+            }
+            updateMarkerVisualState(userId);
+        }
+        
+        if (tvActiveUsersCount != null) {
+            tvActiveUsersCount.setText(activeCount + " / " + totalRoomMembers);
+        }
+    }
+    
+    private long parseDate(String dateString) {
+        try {
+            java.text.SimpleDateFormat sdf;
+            if (dateString.contains(".")) {
+                sdf = new java.text.SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", java.util.Locale.getDefault());
+            } else {
+                sdf = new java.text.SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'", java.util.Locale.getDefault());
+            }
+            sdf.setTimeZone(java.util.TimeZone.getTimeZone("UTC"));
+            java.util.Date date = sdf.parse(dateString);
+            if (date != null) return date.getTime();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return 0L;
     }
 
     private final Map<String, Icon> userIconCache = new HashMap<>();
@@ -530,17 +579,25 @@ public class MainActivity extends AppCompatActivity {
         return IconFactory.getInstance(this).fromBitmap(gsBitmap);
     }
 
-    /** Terapkan tampilan grayscale / berwarna ke marker user manapun berdasarkan status hide */
-    private void applyHideStateToMarker(String userId, boolean hidden) {
+    /** Terapkan tampilan grayscale / berwarna ke marker berdasarkan status hide & offline */
+    private void updateMarkerVisualState(String userId) {
         Marker marker = userMarkers.get(userId);
         Bitmap bitmap = userBitmapCache.get(userId);
         if (marker == null || bitmap == null) return;
-
-        if (hidden) {
+        
+        boolean hidden = userHiddenMap.containsKey(userId) ? userHiddenMap.get(userId) : false;
+        long now = System.currentTimeMillis();
+        long lastSeen = userLastSeenMap.getOrDefault(userId, 0L);
+        boolean isOffline = (now - lastSeen) > 120_000L;
+        
+        if (hidden || isOffline) {
             marker.setIcon(toGrayscaleIcon(bitmap));
         } else {
-            Icon colorIcon = IconFactory.getInstance(this).fromBitmap(bitmap);
-            userIconCache.put(userId, colorIcon);
+            Icon colorIcon = userIconCache.get(userId);
+            if (colorIcon == null) {
+                colorIcon = IconFactory.getInstance(this).fromBitmap(bitmap);
+                userIconCache.put(userId, colorIcon);
+            }
             marker.setIcon(colorIcon);
         }
     }
@@ -549,7 +606,8 @@ public class MainActivity extends AppCompatActivity {
     private void applyHideStateToMyMarker(boolean hidden) {
         String myUserId = getMyUserId();
         if (myUserId == null) return;
-        applyHideStateToMarker(myUserId, hidden);
+        userHiddenMap.put(myUserId, hidden);
+        updateMarkerVisualState(myUserId);
     }
 
     private void fetchRoomMembersAvatar() {
@@ -562,18 +620,23 @@ public class MainActivity extends AppCompatActivity {
                     @Override
                     public void onResponse(Call<RoomDetailResponse> call, Response<RoomDetailResponse> response) {
                         if (response.isSuccessful() && response.body() != null && response.body().data != null) {
+                            totalRoomMembers = response.body().data.members.size();
                             for (RoomDetailResponse.RoomMember member : response.body().data.members) {
                                 if (member.user != null) {
                                     userAvatarUrlCache.put(member.userId, member.user.avatarUrl);
                                     userUsernameCache.put(member.userId, member.user.username);
+                                    userHiddenMap.put(member.userId, member.isHidden);
+                                    
+                                    if (member.updatedAt != null) {
+                                        long time = parseDate(member.updatedAt);
+                                        if (time > 0) userLastSeenMap.put(member.userId, time);
+                                    }
 
-                                    // Menggambar kordinat pengguna secara langsung dari database (lewati interval websocket)
-                                    if (member.lastLat != null && member.lastLng != null && !member.isHidden) {
+                                    if (member.lastLat != null && member.lastLng != null) {
                                         final double lat = member.lastLat;
                                         final double lng = member.lastLng;
                                         runOnUiThread(() -> loadAvatarAndCreateMarker(member.userId, lat, lng));
                                     } else {
-                                        // Jika user di-hide atau tidak punya kordinat, hapus marker lamanya dari peta jika ada
                                         runOnUiThread(() -> {
                                             Marker existing = userMarkers.remove(member.userId);
                                             if (existing != null) {
@@ -583,6 +646,7 @@ public class MainActivity extends AppCompatActivity {
                                     }
                                 }
                             }
+                            runOnUiThread(() -> checkActiveUsers());
                             Log.d(TAG, "Berhasil fetch avatar " + userAvatarUrlCache.size() + " member Room");
                         }
                     }
@@ -632,6 +696,7 @@ public class MainActivity extends AppCompatActivity {
                         Icon icon = IconFactory.getInstance(MainActivity.this).fromBitmap(markerBitmap);
                         userIconCache.put(userId, icon);
                         placeMarkerWithIcon(userId, lat, lng, icon);
+                        updateMarkerVisualState(userId);
                     }
 
                     @Override
@@ -908,13 +973,23 @@ public class MainActivity extends AppCompatActivity {
                             // Hanya kirim ke server dan update posisi marker saat TIDAK hidden
                             SocketManager.getInstance().pushLocation(currentRoomId, lat, lng);
                             if (myUserId != null) {
-                                runOnUiThread(() -> updateUserMarker(myUserId, lat, lng));
+                                runOnUiThread(() -> {
+                                    userLastSeenMap.put(myUserId, System.currentTimeMillis());
+                                    updateUserMarker(myUserId, lat, lng);
+                                    checkActiveUsers();
+                                });
                             }
                         } else {
                             // Saat hidden: tetap tampilkan marker di posisi terakhir (tidak digeser)
                             // Pastikan marker sudah ada di peta (jika belum, buat dulu)
-                            if (myUserId != null && !userMarkers.containsKey(myUserId)) {
-                                runOnUiThread(() -> updateUserMarker(myUserId, lat, lng));
+                            if (myUserId != null) {
+                                runOnUiThread(() -> {
+                                    userLastSeenMap.put(myUserId, System.currentTimeMillis());
+                                    if (!userMarkers.containsKey(myUserId)) {
+                                        updateUserMarker(myUserId, lat, lng);
+                                    }
+                                    checkActiveUsers();
+                                });
                             }
                         }
                     }
@@ -970,6 +1045,7 @@ public class MainActivity extends AppCompatActivity {
 
         // Hentikan polling note
         stopNotePolling();
+        stopActiveStatusPolling();
 
         io.socket.client.Socket socket = SocketManager.getInstance().getSocket();
         if (socket != null) {
@@ -1001,7 +1077,10 @@ public class MainActivity extends AppCompatActivity {
         super.onResume();
         mapView.onResume();
         // Lanjutkan polling saat Activity kembali ke foreground
-        if (currentRoomId != null) startNotePolling();
+        if (currentRoomId != null) {
+            startNotePolling();
+            startActiveStatusPolling();
+        }
     }
 
     @Override
@@ -1010,6 +1089,7 @@ public class MainActivity extends AppCompatActivity {
         mapView.onPause();
         // Hentikan polling saat Activity tidak di foreground agar hemat baterai
         stopNotePolling();
+        stopActiveStatusPolling();
     }
 
     @Override
@@ -1043,6 +1123,22 @@ public class MainActivity extends AppCompatActivity {
         };
         notePollingHandler.postDelayed(notePollingRunnable, NOTE_POLL_INTERVAL_MS);
         Log.d(TAG, "Note polling dimulai (interval " + NOTE_POLL_INTERVAL_MS + "ms)");
+    }
+
+    private void startActiveStatusPolling() {
+        activeStatusHandler.removeCallbacks(activeStatusRunnable);
+        activeStatusRunnable = new Runnable() {
+            @Override
+            public void run() {
+                checkActiveUsers();
+                activeStatusHandler.postDelayed(this, ACTIVE_POLL_INTERVAL_MS);
+            }
+        };
+        activeStatusHandler.postDelayed(activeStatusRunnable, ACTIVE_POLL_INTERVAL_MS);
+    }
+
+    private void stopActiveStatusPolling() {
+        activeStatusHandler.removeCallbacks(activeStatusRunnable);
     }
 
     /** Hentikan polling note */
@@ -1087,6 +1183,7 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onResponse(Call<BaseResponse> call, Response<BaseResponse> response) {
                 stopNotePolling();
+                stopActiveStatusPolling();
                 Snackbar.make(findViewById(android.R.id.content), "Berhasil keluar dari ruangan", Snackbar.LENGTH_SHORT).show();
                 // Kembali ke daftar room
                 Intent intent = new Intent(MainActivity.this, RoomActivity.class);

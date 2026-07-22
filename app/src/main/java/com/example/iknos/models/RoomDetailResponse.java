@@ -37,6 +37,9 @@ public class RoomDetailResponse {
         @SerializedName("lastLng")
         public Double lastLng;
 
+        @SerializedName("updatedAt")
+        public String updatedAt;
+
         @SerializedName("user")
         public UserInfo user;
     }
