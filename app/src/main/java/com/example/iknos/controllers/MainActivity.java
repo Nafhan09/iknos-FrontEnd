@@ -125,9 +125,6 @@ public class MainActivity extends AppCompatActivity {
     private final android.os.Handler activeStatusHandler = new android.os.Handler(android.os.Looper.getMainLooper());
     private Runnable activeStatusRunnable;
 
-
-
-
     // Membuka kamera bawaan HP
     private final ActivityResultLauncher<Intent> cameraLauncher = registerForActivityResult(
             new ActivityResultContracts.StartActivityForResult(),
@@ -163,7 +160,7 @@ public class MainActivity extends AppCompatActivity {
             }
     );
 
-    /** Membaca EXIF dari foto yang diambil untuk merotasinya ke arah yang benar (upright) */
+    // Membaca EXIF dari foto yang diambil untuk merotasinya ke arah yang benar (upright)
     private Bitmap getUprightBitmap(Uri imageUri) {
         try {
             Bitmap bitmap = MediaStore.Images.Media.getBitmap(getContentResolver(), imageUri);
@@ -196,6 +193,8 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    // Method untuk inisialisasi MainActivity saat dibuka
+    // Method meliputi layouting, event untuk SettingsActivity, Logika Join Request, Intent MainActivity dengan putExtra Name & id room dan pemanggilan fungsi fetchRealRooms() untuk mengambil data room terbaru dari server/database.
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -206,7 +205,7 @@ public class MainActivity extends AppCompatActivity {
 
         Log.d(TAG, "Membuka Room: " + currentRoomName + " ID: " + currentRoomId);
 
-        // MapLibre wajib di-init sebelum setContentView, jadi kita panggil di baris paling atas onCreate() — lihat catatan di bawah
+        // MapLibre di-init sebelum setContentView
         tvActiveUsersCount = findViewById(R.id.tvActiveUsersCount);
         switchHideLocation = findViewById(R.id.switchHideLocation);
         btnInstaNote = findViewById(R.id.btnInstaNote);
@@ -219,19 +218,23 @@ public class MainActivity extends AppCompatActivity {
         btnShowMembers = findViewById(R.id.btnShowMembers);
         btnShowMembers.setOnClickListener(v -> showMembersDialog());
 
+        // Mapping View
         mapView = findViewById(R.id.mapView);
         mapView.onCreate(savedInstanceState);
+
+        // MapLibre map configuration, menggunakan basemep Carto
         mapView.getMapAsync(map -> {
             mapLibreMap = map;
             mapLibreMap.setStyle("https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json", style -> {
                 Log.d(TAG, "Map style berhasil dimuat");
                 mapLibreMap.setCameraPosition(new CameraPosition.Builder()
+                        // Koordinat Bandung sebagai titik awal
                         .target(new LatLng(-6.9147, 107.6098))
                         .zoom(14)
                         .build());
             });
 
-            // Custom InfoWindowAdapter agar Note muncul di atas marker
+            // InfoWindowAdapter untuk menampilkan Note di atas marker
             mapLibreMap.setInfoWindowAdapter(new MapLibreMap.InfoWindowAdapter() {
                 @androidx.annotation.Nullable
                 @Override
@@ -252,6 +255,7 @@ public class MainActivity extends AppCompatActivity {
                     NoteResponse.NoteData note = userNotesCache.get(userId);
                     String avatarUrl = userAvatarUrlCache.get(userId);
 
+                    // Menampilkan foto avatar
                     if (avatarUrl != null && !avatarUrl.isEmpty()) {
                         Glide.with(MainActivity.this).load(avatarUrl).placeholder(R.mipmap.ic_launcher_round).into(ivNoteAvatar);
                     }
@@ -340,17 +344,26 @@ public class MainActivity extends AppCompatActivity {
             });
         });
 
+        // Kondisi normal (Ruangan dapat dibuka)
         if (currentRoomId != null) {
+            // Mengambil token dari SharedPreferences
             android.content.SharedPreferences pref = getSharedPreferences("IknosPref", MODE_PRIVATE);
             String token = pref.getString("JWT_TOKEN", "");
 
+            // Menghubungkan ke SocketManager
             SocketManager.getInstance().connectSocket(token);
 
+            // Fungsi berikut dijalankan saat ruangan dibuka
+            // Mengambil avatar semua anggota ruangan
             fetchRoomMembersAvatar();
-            fetchRoomNotes(); // ambil note semua anggota di awal
-            startNotePolling(); // mulai polling berkala setiap 5 detik
-            startActiveStatusPolling(); // mulai polling status aktif
-            setupSocketListener();
+            // Mengambil note semua anggota ruangan di awal
+            fetchRoomNotes();
+            // Mulai polling berkala setiap 5 detik
+            startNotePolling();
+            // Mulai polling status aktif
+            startActiveStatusPolling();
+
+            // Setup listener untuk socket
             SocketManager.getInstance().joinRoom(currentRoomId, snapshot -> {
                 long now = System.currentTimeMillis();
                 for (int i = 0; i < snapshot.length(); i++) {
@@ -399,13 +412,9 @@ public class MainActivity extends AppCompatActivity {
             applyHideStateToMyMarker(isChecked);
 
             if (isChecked) {
-                Snackbar.make(findViewById(android.R.id.content),
-                        "Lokasi disembunyikan",
-                        Snackbar.LENGTH_SHORT).show();
+                Snackbar.make(findViewById(android.R.id.content),"Lokasi disembunyikan",Snackbar.LENGTH_SHORT).show();
             } else {
-                Snackbar.make(findViewById(android.R.id.content),
-                        "Lokasi dibagikan kembali",
-                        Snackbar.LENGTH_SHORT).show();
+                Snackbar.make(findViewById(android.R.id.content),"Lokasi dibagikan kembali", Snackbar.LENGTH_SHORT).show();
             }
 
         });
@@ -428,8 +437,8 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
-
     // Fungsi Tampilkan Daftar Member Room
+    // Menggunakan endpoint @GET("rooms/{roomId}")
     private void showMembersDialog() {
         if (currentRoomId == null || currentRoomId.isEmpty()) return;
 
@@ -470,9 +479,12 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
+    // Fungsi untuk Setup Socket Listener agar menerima data real-time dari server
     private void setupSocketListener() {
+        // Mengambil socket dari SocketManager
         io.socket.client.Socket socket = SocketManager.getInstance().getSocket();
 
+        // Cek apakah socket berhasil diambil dari SocketManager
         if (socket != null) {
             // Event posisi real-time dari user lain
             socket.on("location_broadcast", args -> {
@@ -486,7 +498,7 @@ public class MainActivity extends AppCompatActivity {
 
                     userLastSeenMap.put(userId, System.currentTimeMillis());
 
-                    // Update UI (marker di peta) wajib di UI Thread
+                    // Update UI (marker di peta)
                     runOnUiThread(() -> {
                         updateUserMarker(userId, lat, lng);
                         checkActiveUsers();
@@ -513,8 +525,7 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    /** Update label jumlah user aktif berdasarkan jumlah marker di peta */
-    /** Update label jumlah user aktif berdasarkan timestamp last seen */
+    // Fungsi untuk Update label jumlah user aktif berdasarkan timestamp last seen
     private void checkActiveUsers() {
         long now = System.currentTimeMillis();
         int activeCount = 0;
@@ -532,6 +543,7 @@ public class MainActivity extends AppCompatActivity {
         }
     }
     
+    // Fungsi parse tanggal
     private long parseDate(String dateString) {
         try {
             java.text.SimpleDateFormat sdf;
@@ -549,25 +561,27 @@ public class MainActivity extends AppCompatActivity {
         return 0L;
     }
 
+    // Cache Icon
     private final Map<String, Icon> userIconCache = new HashMap<>();
     // Cache bitmap asli (berwarna) per user, untuk membuat ulang icon grayscale/berwarna
     private final Map<String, Bitmap> userBitmapCache = new HashMap<>();
 
+    // Fungsi update posisi marker
     private void updateUserMarker(String userId, double lat, double lng) {
         if (mapLibreMap == null) return;
 
         Marker existingMarker = userMarkers.get(userId);
 
         if (existingMarker != null) {
-            // Marker sudah ada -> cukup geser posisinya, tidak perlu render ulang foto
+            // Jika marker user sudah ada, geser posisinya
             existingMarker.setPosition(new LatLng(lat, lng));
         } else {
-            // Marker belum ada -> perlu ambil foto profil dulu, baru buat marker
+            // Jika marker user belum ada, buat marker (load foto profil user)
             loadAvatarAndCreateMarker(userId, lat, lng);
         }
     }
 
-    /** Buat icon grayscale (hitam-putih) dari bitmap berwarna */
+    // Fungsi untuk mengubah icon menjadi grayscale (hitam-putih)
     private Icon toGrayscaleIcon(Bitmap colorBitmap) {
         Bitmap gsBitmap = Bitmap.createBitmap(colorBitmap.getWidth(), colorBitmap.getHeight(), Bitmap.Config.ARGB_8888);
         Canvas canvas = new Canvas(gsBitmap);
@@ -579,7 +593,7 @@ public class MainActivity extends AppCompatActivity {
         return IconFactory.getInstance(this).fromBitmap(gsBitmap);
     }
 
-    /** Terapkan tampilan grayscale / berwarna ke marker berdasarkan status hide & offline */
+    // Terapkan tampilan grayscale / berwarna ke marker berdasarkan status hide & offline
     private void updateMarkerVisualState(String userId) {
         Marker marker = userMarkers.get(userId);
         Bitmap bitmap = userBitmapCache.get(userId);
@@ -602,7 +616,7 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    /** Shortcut untuk mengubah marker milik sendiri */
+    // Fungsi untuk apply hide state ke marker sendiri
     private void applyHideStateToMyMarker(boolean hidden) {
         String myUserId = getMyUserId();
         if (myUserId == null) return;
@@ -610,6 +624,7 @@ public class MainActivity extends AppCompatActivity {
         updateMarkerVisualState(myUserId);
     }
 
+    // Fungsi untuk fetch foto profil room
     private void fetchRoomMembersAvatar() {
         if (currentRoomId == null) return;
 
@@ -658,18 +673,18 @@ public class MainActivity extends AppCompatActivity {
                 });
     }
 
+    // Fungsi untuk mendapatkan foto profil room
     private String getAvatarUrlForUser(String userId) {
         String avatarUrl = userAvatarUrlCache.get(userId);
-        return avatarUrl != null ? avatarUrl : ""; // Isi string pake icon default
+        return avatarUrl != null ? avatarUrl : "";
     }
 
     private String getMyUserId() {
         android.content.SharedPreferences pref = getSharedPreferences("IknosPref", MODE_PRIVATE);
-        return pref.getString("USER_ID", null); // sesuaikan key ini dengan yang kamu pakai saat simpan userId setelah login
+        return pref.getString("USER_ID", null);
     }
 
     private void loadAvatarAndCreateMarker(String userId, double lat, double lng) {
-        // Cek cache dulu, supaya tidak download ulang kalau icon sudah pernah dibuat sebelumnya
         if (userIconCache.containsKey(userId)) {
             placeMarkerWithIcon(userId, lat, lng, userIconCache.get(userId));
             return;
@@ -690,7 +705,6 @@ public class MainActivity extends AppCompatActivity {
                         ivAvatar.setImageBitmap(resource);
 
                         Bitmap markerBitmap = viewToBitmap(markerView);
-                        // Simpan bitmap berwarna asli ke cache
                         userBitmapCache.put(userId, markerBitmap);
 
                         Icon icon = IconFactory.getInstance(MainActivity.this).fromBitmap(markerBitmap);
@@ -701,7 +715,6 @@ public class MainActivity extends AppCompatActivity {
 
                     @Override
                     public void onLoadCleared(Drawable placeholder) {
-                        // Tidak perlu aksi khusus di sini
                     }
 
                     @Override
@@ -822,7 +835,7 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
-    /** Menghapus note sendiri */
+    // Fungsi untuk menghapus note sendiri
     private void deleteNote() {
         if (currentRoomId == null) return;
         IknosApiService api = RetrofitClient.getClient(this).create(IknosApiService.class);
@@ -847,7 +860,7 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
-    /** Upload note (teks dan/atau gambar) ke backend, lalu refresh cache */
+    // Fungsi untuk upload note (teks dan/atau gambar) ke backend, lalu refresh cache
     private void uploadNote(String text, Bitmap imageBitmap) {
         if (currentRoomId == null) return;
         IknosApiService api = RetrofitClient.getClient(this).create(IknosApiService.class);
@@ -896,7 +909,7 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    /** Ambil semua note anggota room dan simpan di cache (userNotesCache) */
+    // Fungsi untuk mengambil semua note anggota room dan simpan di cache (userNotesCache)
     private void fetchRoomNotes() {
         if (currentRoomId == null) return;
         IknosApiService api = RetrofitClient.getClient(this).create(IknosApiService.class);
@@ -918,7 +931,7 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
-    /** Konversi Bitmap menjadi File sementara di cache directory */
+    // Fungsi untuk konversi Bitmap menjadi File sementara di cache directory
     private File bitmapToTempFile(Bitmap bitmap) {
         try {
             File tempFile = File.createTempFile("note_selfie_", ".jpg", getCacheDir());
@@ -946,13 +959,15 @@ public class MainActivity extends AppCompatActivity {
             startLocationUpdates();
         }
     }
+
+    // Fungsi untuk memulai lokasi updates
+    // Fungsi meliputi FusedLocationProviderClient untuk mendapatkan lokasi, LocationRequest untuk menentukan interval update, dan LocationCallback untuk menerima update lokasi.
     private void startLocationUpdates() {
-
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
-
         LocationRequest locationRequest =
                 new LocationRequest.Builder(
                         Priority.PRIORITY_HIGH_ACCURACY,
+                        // interval 10 detik
                         10000)
                         .setMinUpdateIntervalMillis(10000)
                         .build();
@@ -970,7 +985,7 @@ public class MainActivity extends AppCompatActivity {
                         String myUserId = getMyUserId();
 
                         if (!isHidden) {
-                            // Hanya kirim ke server dan update posisi marker saat TIDAK hidden
+                            // Hanya kirim ke server dan update posisi marker saat tidak hidden
                             SocketManager.getInstance().pushLocation(currentRoomId, lat, lng);
                             if (myUserId != null) {
                                 runOnUiThread(() -> {
@@ -1009,6 +1024,8 @@ public class MainActivity extends AppCompatActivity {
         }
     }
     @Override
+
+    // Fungsi izin akses lokasi
     public void onRequestPermissionsResult(
             int requestCode,
             @NonNull String[] permissions,
@@ -1034,11 +1051,14 @@ public class MainActivity extends AppCompatActivity {
         }
     }
     @Override
+
+    // Method yang dipanggil saat activity dihancurkan
+    // Metohd meliputi mematikan tracker GPS, menghentikan polling note, menghentikan polling active status, mematikan pendengar event socket, dan memberitahu backend kalau kita keluar dari room peta
     protected void onDestroy() {
         mapView.onDestroy();
         super.onDestroy();
 
-        // 1. Matikan tracker GPS agar hemat baterai
+        // Matikan tracker GPS 
         if (fusedLocationClient != null && locationCallback != null) {
             fusedLocationClient.removeLocationUpdates(locationCallback);
         }
@@ -1049,7 +1069,7 @@ public class MainActivity extends AppCompatActivity {
 
         io.socket.client.Socket socket = SocketManager.getInstance().getSocket();
         if (socket != null) {
-            // 2. Matikan pendengar event agar tidak terjadi memory leak
+            // Matikan pendengar event agar tidak terjadi memory leak
             socket.off("location_broadcast");
 
             // 3. TAMBAHKAN INI: Beri tahu backend kalau kita keluar dari Room peta
@@ -1065,7 +1085,7 @@ public class MainActivity extends AppCompatActivity {
             }
         }
     }
-//    Lifecycle untuk MapView
+    // Lifecycle untuk MapView
     @Override
     protected void onStart() {
         super.onStart();
@@ -1109,7 +1129,8 @@ public class MainActivity extends AppCompatActivity {
         super.onSaveInstanceState(outState);
         mapView.onSaveInstanceState(outState);
     }
-    /** Mulai polling note secara berkala setiap NOTE_POLL_INTERVAL_MS */
+    // Fungsi memulai polling note secara berkala setiap NOTE_POLL_INTERVAL_MS
+    // Fungsi meliputi pengecekan duplikat runnable, penjadwalan ulang Runnable, dan memanggil fungsi fetchRoomNotes()
     private void startNotePolling() {
         // Hindari duplikat runnable
         notePollingHandler.removeCallbacks(notePollingRunnable);
@@ -1137,17 +1158,18 @@ public class MainActivity extends AppCompatActivity {
         activeStatusHandler.postDelayed(activeStatusRunnable, ACTIVE_POLL_INTERVAL_MS);
     }
 
+    // Fungsi menghentikan polling status aktif
     private void stopActiveStatusPolling() {
         activeStatusHandler.removeCallbacks(activeStatusRunnable);
     }
 
-    /** Hentikan polling note */
+    // Fungsi menghentikan polling note
     private void stopNotePolling() {
         notePollingHandler.removeCallbacks(notePollingRunnable);
         Log.d(TAG, "Note polling dihentikan");
     }
 
-    /** Tampilkan dialog konfirmasi sebelum leave room */
+    // Tampilkan dialog konfirmasi sebelum leave room
     private void showLeaveRoomConfirmation() {
         CharSequence customTitle = HtmlCompat.fromHtml("<font color='#00E676'>Keluar dari Ruangan?</font>", HtmlCompat.FROM_HTML_MODE_LEGACY);
         CharSequence customMessage = HtmlCompat.fromHtml("<font color='#FFFFFF'>Kamu akan meninggalkan ruangan ini. Kamu perlu bergabung ulang lagi untuk masuk.</font>", HtmlCompat.FROM_HTML_MODE_LEGACY);
@@ -1161,7 +1183,8 @@ public class MainActivity extends AppCompatActivity {
                 .show();
     }
 
-    /** Panggil REST API leave room, lalu kembali ke RoomActivity */
+    // Fungsi keluar dari room
+    // Fungsi meliputi pengecekan currentRoomId, mengirimkan event leave_room ke server, memanggil REST API leaveRoom, menghentikan polling, dan kembali ke RoomActivity
     private void leaveRoom() {
         if (currentRoomId == null) return;
 

@@ -45,7 +45,6 @@ public class LoginActivity extends AppCompatActivity {
             String passwordInput = etPassword.getText().toString().trim();
 
             if (emailInput.isEmpty() || passwordInput.isEmpty()) {
-                // TODO: HAPUS/GANTI TOAST
                 Snackbar.make(findViewById(android.R.id.content), "Semua kolom harus diisi!", Snackbar.LENGTH_SHORT).show();
                 return;
             }
@@ -77,7 +76,6 @@ public class LoginActivity extends AppCompatActivity {
                                 .putBoolean("IS_NEW_USER", false)
                                 .apply();
 
-                        // TODO: HAPUS/GANTI TOAST
                         Snackbar.make(findViewById(android.R.id.content), "Login Berhasil!", Snackbar.LENGTH_SHORT).show();
 
                         // Intent untuk Pindah ke RoomActivity
@@ -86,14 +84,12 @@ public class LoginActivity extends AppCompatActivity {
                         finish();
 
                     } else {
-                        // TODO: HAPUS/GANTI TOAST
                         Snackbar.make(findViewById(android.R.id.content), "Login Gagal! Cek email/password.", Snackbar.LENGTH_SHORT).show();
                     }
                 }
 
                 @Override
                 public void onFailure(Call<LoginResponse> call, Throwable t) {
-                    // TODO: HAPUS/GANTI TOAST
                     Snackbar.make(findViewById(android.R.id.content), "Error Koneksi: " + t.getMessage(), Snackbar.LENGTH_SHORT).show();
                 }
             });

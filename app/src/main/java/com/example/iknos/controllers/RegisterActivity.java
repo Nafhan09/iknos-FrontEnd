@@ -41,7 +41,6 @@ public class RegisterActivity extends AppCompatActivity {
             String passwordInput = etRegPassword.getText().toString().trim();
 
             if (usernameInput.isEmpty() || emailInput.isEmpty() || passwordInput.isEmpty()) {
-                // TODO: HAPUS/GANTI TOAST
                 Snackbar.make(findViewById(android.R.id.content), "Semua kolom harus diisi!", Snackbar.LENGTH_SHORT).show();
                 return;
             }
@@ -57,19 +56,16 @@ public class RegisterActivity extends AppCompatActivity {
                 public void onResponse(Call<LoginResponse> call, Response<LoginResponse> response) {
 
                     if (response.isSuccessful() && response.body() != null && response.body().isSuccess()) {
-                        // TODO: HAPUS/GANTI TOAST
                         Snackbar.make(findViewById(android.R.id.content), "Registrasi Berhasil! Silakan Login.", Snackbar.LENGTH_SHORT).show();
                         finish();
 
                     } else {
-                        // TODO: HAPUS/GANTI TOAST
                         Snackbar.make(findViewById(android.R.id.content), "Registrasi Gagal! Email/Username mungkin sudah terpakai.", Snackbar.LENGTH_SHORT).show();
                     }
                 }
 
                 @Override
                 public void onFailure(Call<LoginResponse> call, Throwable t) {
-                    // TODO: HAPUS/GANTI TOAST
                     Snackbar.make(findViewById(android.R.id.content), "Error Koneksi: " + t.getMessage(), Snackbar.LENGTH_SHORT).show();
                 }
             });

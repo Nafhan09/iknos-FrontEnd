@@ -210,7 +210,7 @@ public class RoomActivity extends AppCompatActivity {
         tabCreate.setOnClickListener(v -> showCreate.run());
         tabJoin.setOnClickListener(v -> showJoin.run());
 
-        // --- Aksi tombol Create Room ---
+        // Aksi tombol Create Room
         btnCreateRoom.setOnClickListener(v -> {
             String roomName = etNewRoomName.getText() != null ? etNewRoomName.getText().toString().trim() : "";
             if (roomName.isEmpty()) {
@@ -223,26 +223,23 @@ public class RoomActivity extends AppCompatActivity {
                 public void onResponse(Call<CreateRoomResponse> call, Response<CreateRoomResponse> response) {
                     if (response.isSuccessful() && response.body() != null && response.body().isSuccess()) {
                         RoomModel newRoom = response.body().getData();
-                            // TODO: HAPUS/GANTI TOAST
                         Snackbar.make(findViewById(android.R.id.content), "Room berhasil dibuat!\nKode: " + newRoom.getCode(), Snackbar.LENGTH_LONG).show();
 
                             // Panggil fungsi untuk mengambil daftar Room sekaligus Refresh data yang ditampilkan
                         fetchRealRooms();
                         dialog.dismiss();
                     } else {
-                            // TODO: HAPUS/GANTI TOAST
                         Snackbar.make(findViewById(android.R.id.content), "Gagal membuat room. Maksimal 5 room.", Snackbar.LENGTH_SHORT).show();
                     }
                 }
                 @Override
                 public void onFailure(Call<CreateRoomResponse> call, Throwable t) {
-                        // TODO: HAPUS/GANTI TOAST
                     Snackbar.make(findViewById(android.R.id.content), "Error koneksi: " + t.getMessage(), Snackbar.LENGTH_SHORT).show();
                 }
             });
         });
 
-        // --- Aksi tombol Join Room ---
+        // Aksi tombol Join Room
         btnJoinRoom.setOnClickListener(v -> {
             String roomCode = etJoinRoomCode.getText() != null ? etJoinRoomCode.getText().toString().trim() : "";
             if (roomCode.isEmpty()) {
@@ -293,7 +290,6 @@ public class RoomActivity extends AppCompatActivity {
                         loadPendingRequestsSilently(roomList.get(0).getId(), roomList.get(0).getName());
                     }
                 } else {
-                    // TODO: HAPUS/GANTI TOAST
                     Snackbar.make(findViewById(android.R.id.content), "Gagal mengambil daftar room", Snackbar.LENGTH_SHORT).show();
                 }
             }
@@ -303,7 +299,6 @@ public class RoomActivity extends AppCompatActivity {
                 if (swipeRefreshRoom != null) {
                     swipeRefreshRoom.setRefreshing(false);
                 }
-                // TODO: HAPUS/GANTI TOAST
                 Snackbar.make(findViewById(android.R.id.content), t.getMessage(), Snackbar.LENGTH_SHORT).show();
             }
         });
@@ -368,7 +363,6 @@ public class RoomActivity extends AppCompatActivity {
             @Override
             public void onResponse(Call<BaseResponse> call, Response<BaseResponse> response) {
                 if (response.isSuccessful() && response.body() != null && response.body().isSuccess()) {
-                    // TODO: HAPUS/GANTI TOAST
                     Snackbar.make(findViewById(android.R.id.content), "Request berhasil di-" + actionName, Snackbar.LENGTH_SHORT).show();
 
                     // Refresh daftar request secara silent
@@ -378,7 +372,6 @@ public class RoomActivity extends AppCompatActivity {
 
             @Override
             public void onFailure(Call<BaseResponse> call, Throwable t) {
-                // TODO: HAPUS/GANTI TOAST
                 Snackbar.make(findViewById(android.R.id.content), "Error: " + t.getMessage(), Snackbar.LENGTH_SHORT).show();
             }
         });
