@@ -1,6 +1,8 @@
 # Iknos - Frontend Android (Java)
 
-Repositori ini berisi kode sumber *frontend* untuk aplikasi **Iknos**, sebuah aplikasi pemantauan lokasi *real-time* berbasis koordinasi sosial. Seluruh antarmuka UI telah disesuaikan dengan tema *Dark Mode* minimalis menggunakan warna aksen hijau neon `#00E676`.
+Repositori ini berisi kode sumber *frontend* untuk aplikasi **Iknos**, sebuah aplikasi pemantauan lokasi *real-time* berbasis koordinasi sosial. 
+
+### Download -> https://github.com/Nafhan09/iknos-FrontEnd/releases/download/v1.0.0/app-release.apk
 
 ## Daftar Isi MVP & Cakupan Frontend
 1. **Autentikasi & Otorisasi**: Halaman Login & Register dengan integrasi REST API menggunakan Retrofit.
